@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Insert number of Bus line:"
+        />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:id="@+id/edit_text_number_bus"
+        android:inputType="number"
+        android:layout_marginHorizontal="80dp"/>
+
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Position"
+        android:layout_marginTop="30dp"
+        />
+    <TextView
+        android:id="@+id/edit_text_position"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_gps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        app:iconGravity="textTop"
+        android:layout_margin="10dp"
+        app:icon="@drawable/ic_baseline_gps_fixed_24" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_add_busstop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        app:icon="@drawable/sharp_add_black_36"
+        android:text="Add" />
+
+
+</androidx.appcompat.widget.LinearLayoutCompat>

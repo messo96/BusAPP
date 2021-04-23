@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BusAPP</string>
+    <string name="title_home">Home</string>
+    <string name="title_add">Add</string>
+    <string name="title_profile">Profile</string>
+    <string name="title_app">App degli autobus</string>
+</resources>

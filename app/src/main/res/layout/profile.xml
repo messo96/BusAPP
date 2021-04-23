@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+   <EditText
+       android:id="@+id/profile_name"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:hint="Username"
+       android:inputType="textPersonName"
+       android:layout_margin="10dp"
+       android:gravity="center"
+       />
+
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+      android:hint="Last Position" />
+
+   <TextView
+      android:id="@+id/textView_last_position"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:hint="No last Position yet"
+       android:gravity="center"/>
+
+   <com.google.android.material.button.MaterialButton
+       android:id="@+id/button_save_profile"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="36dp"
+      android:text="Save" />
+
+
+
+</androidx.appcompat.widget.LinearLayoutCompat>
