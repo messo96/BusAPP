@@ -4,6 +4,9 @@ import android.app.Application;
 
 import androidx.lifecycle.LiveData;
 
+import com.example.busapp.database.BusStop.BusStopDAO;
+import com.example.busapp.database.BusStop.BusStopDatabase;
+
 import java.util.List;
 
 public class UserRepository {
@@ -12,9 +15,9 @@ public class UserRepository {
     private LiveData<List<User>> userList;
 
     public UserRepository(Application application){
-        UserDatabase userDatabase = UserDatabase.getDatabase(application);
+        BusStopDatabase busStopDatabase = BusStopDatabase.getDatabase(application);
 
-        userDAO = userDatabase.userDAO();
+        userDAO = busStopDatabase.userDAO();
         userList = userDAO.getAll();
     }
 
@@ -24,7 +27,7 @@ public class UserRepository {
 
 
     public void addUser(final User user){
-        UserDatabase.databaseWriterExecutor.execute(new Runnable() {
+        BusStopDatabase.databaseWriterExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 userDAO.addUser(user);
@@ -39,7 +42,7 @@ public class UserRepository {
 
 
     public void deleteAll(){
-        UserDatabase.databaseWriterExecutor.execute(new Runnable() {
+        BusStopDatabase.databaseWriterExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 userDAO.deleteAll();

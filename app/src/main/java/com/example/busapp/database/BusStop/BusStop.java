@@ -1,29 +1,36 @@
 package com.example.busapp.database.BusStop;
 
+import android.graphics.Bitmap;
+
 import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
+import androidx.room.Relation;
 
 import com.example.busapp.Utils.Coordinates;
 import com.example.busapp.database.User;
 
+import static androidx.room.ForeignKey.CASCADE;
+
 @Entity(foreignKeys = {@ForeignKey(entity = User.class,
         parentColumns   = "user_id",
-        childColumns    = "user_created_id") })
+        childColumns    = "user_created_id", onDelete = CASCADE) })
 public class BusStop {
     @PrimaryKey(autoGenerate = true)
     int bus_stop_id;
 
+
     private int user_created_id;
     private String name;
     @Embedded private Coordinates position;
+    private byte[] image;
 
-
-    public BusStop(int user_created_id, String name, Coordinates position) {
+    public BusStop(int user_created_id, String name, Coordinates position, byte[] image) {
         this.user_created_id = user_created_id;
         this.name = name;
         this.position = position;
+        this.image = image;
     }
 
 
@@ -45,5 +52,10 @@ public class BusStop {
 
     public Coordinates getPosition() {
         return position;
+    }
+
+
+    public byte[] getImage() {
+        return image;
     }
 }

@@ -4,9 +4,6 @@ import android.app.Application;
 
 import androidx.lifecycle.LiveData;
 
-import com.example.busapp.database.User;
-import com.example.busapp.database.UserDAO;
-import com.example.busapp.database.UserDatabase;
 
 import java.util.List;
 

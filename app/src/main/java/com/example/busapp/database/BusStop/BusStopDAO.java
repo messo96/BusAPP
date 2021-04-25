@@ -16,8 +16,8 @@ public interface BusStopDAO {
     @Query("SELECT * FROM BusStop")
     LiveData<List<BusStop>> getAll();
 
-    @Query("SELECT S.* FROM BusStop S, User U where S.user_created_id = :user_id")
-    LiveData<List<BusStop>> getBusStop(final int user_id);
+    @Query("SELECT S.* FROM BusStop S, User U where S.user_created_id = :user_created_id")
+    LiveData<List<BusStop>> getBusStop(final int user_created_id);
 
 
     @Query("DELETE FROM BusStop")

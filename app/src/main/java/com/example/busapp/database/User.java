@@ -10,7 +10,7 @@ import com.example.busapp.Utils.Coordinates;
 @Entity
 public class User {
     @PrimaryKey(autoGenerate = true)
-    private int user_id;
+    public int user_id;
 
     private String username;
     @Embedded private Coordinates last_location;

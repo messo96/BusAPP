@@ -3,21 +3,26 @@ package com.example.busapp;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,10 +43,16 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Locale;
 
+import static android.app.Activity.RESULT_OK;
+import static android.content.Context.LOCATION_SERVICE;
+
 public class AddFragment extends Fragment {
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -51,6 +62,7 @@ public class AddFragment extends Fragment {
     private TextView view_position;
     private Coordinates coordinates;
     private BusStopRepository busStopRepository;
+    private byte[] image;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,7 +86,11 @@ public class AddFragment extends Fragment {
 
         Activity activity = getActivity();
 
-        if(activity != null) {
+        if (activity != null) {
+            view.findViewById(R.id.button_camera_bus).setOnClickListener(e ->{
+                uploadImage();
+            });
+
             view_position = activity.findViewById(R.id.edit_text_position);
             EditText editText_busNumber = view.findViewById(R.id.edit_text_number_bus);
             initializeLocation(getActivity());
@@ -94,15 +110,17 @@ public class AddFragment extends Fragment {
                     });
 
             view.findViewById(R.id.button_gps).setOnClickListener(c -> {
-               startLocationUpdates(activity);
+                startLocationUpdates(activity);
+
             });
-            view.findViewById(R.id.button_add_busstop).setOnClickListener(o ->{
+            view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
                 int id = sharedPreferences.getInt("id", 0);
-                if(coordinates != null && editText_busNumber.getText()!=null){
-                    if(id == 0)
-                        Toast.makeText(getContext(), "IS 0", Toast.LENGTH_SHORT).show();
+                if (coordinates != null && editText_busNumber.getText() != null && image != null) {
+                    if (id == 0)
+                        Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
                     else
-                        busStopRepository.addBusStop(new BusStop(sharedPreferences.getInt("id", 0),String.valueOf(editText_busNumber.getText()), coordinates));
+                        busStopRepository.addBusStop(new BusStop(sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image));
+
                 }
             });
         }
@@ -123,17 +141,17 @@ public class AddFragment extends Fragment {
                 super.onLocationResult(locationResult);
 
                 Toast.makeText(activity.getApplicationContext(), "Position getted", Toast.LENGTH_SHORT).show();
-                    try {
-                        Address location = geocoder.getFromLocation(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude(), 1).get(0);
-                        view_position.setText(location.getAddressLine(0));
-                        coordinates = new Coordinates(location.getLatitude(), location.getLongitude());
-                        sharedPreferences.edit()
-                                .putString("last_coordinates", coordinates.toString())
-                                .apply();
+                try {
+                    Address location = geocoder.getFromLocation(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude(), 1).get(0);
+                    view_position.setText(location.getAddressLine(0));
+                    coordinates = new Coordinates(location.getLatitude(), location.getLongitude());
+                    sharedPreferences.edit()
+                            .putString("last_coordinates", coordinates.toString())
+                            .apply();
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
             }
         };
@@ -144,10 +162,10 @@ public class AddFragment extends Fragment {
         String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
         if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED)
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-        else if(ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
-            activityResultLauncher.launch(PERMISSION_REQUESTED);
-        else
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
             showDialog(activity);
+        else
+            activityResultLauncher.launch(PERMISSION_REQUESTED);
 
 
     }
@@ -156,9 +174,33 @@ public class AddFragment extends Fragment {
         new AlertDialog.Builder(activity)
                 .setMessage("You have denied the permission, but this need to be app works :(")
                 .setCancelable(false)
-                .setPositiveButton("Enable now!", (dialog,id) ->activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
-                .setNegativeButton("Cancel", (dialog, id)-> dialog.cancel())
+                .setPositiveButton("Enable now!", (dialog, id) -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                .setNegativeButton("Cancel", (dialog, id) -> dialog.cancel())
                 .create()
                 .show();
     }
+
+
+    private void uploadImage() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        } catch (ActivityNotFoundException e) {
+            // display error state to the user
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            ImageView imageView = getView().findViewById(R.id.imageview_bus);
+            imageView.setImageBitmap(imageBitmap);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            image = stream.toByteArray();
+        }
+    }
+
 }

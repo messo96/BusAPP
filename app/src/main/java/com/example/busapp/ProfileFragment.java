@@ -1,7 +1,9 @@
     package com.example.busapp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -58,16 +60,19 @@ import java.util.concurrent.atomic.AtomicReference;
         TextView textView_last_position = view.findViewById(R.id.textView_last_position);
         EditText editText_username = view.findViewById(R.id.profile_name);
         listViewModel = new ViewModelProvider((ViewModelStoreOwner) getActivity()).get(ListViewModel.class);
-
+        Activity activity = getActivity();
 
         editText_username.setText(sharedPreferences.getString("username", "Username"));
         String last_position = sharedPreferences.getString("last_coordinates", "NOT YET EXPLORED");
-        if(!last_position.equals("NOT YET EXPLORED")) {
+        if(!last_position.equals("NOT YET EXPLORED") && !last_position.isEmpty()) {
             try {
-                textView_last_position
-                        .setText(new Geocoder(getContext(), Locale.getDefault())
-                                .getFromLocation(Double.parseDouble(last_position.split(";",2)[0]), Double.parseDouble(last_position.split(";",2)[1]), 1)
-                                .get(0).getAddressLine(0));
+                List<Address> geo = new Geocoder(getContext(), Locale.getDefault())
+                        .getFromLocation(Double.parseDouble(last_position.split(";",2)[0]), Double.parseDouble(last_position.split(";",2)[1]), 1);
+
+                if(!geo.isEmpty())
+                    textView_last_position
+                        .setText(geo.get(0).getAddressLine(0));
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -82,16 +87,17 @@ import java.util.concurrent.atomic.AtomicReference;
             userRepository.addUser(new User(String.valueOf(editText_username.getText()), new Coordinates((float)0.000,(float)  0.000)));
 
             //listViewModel.getAll().observe((LifecycleOwner) getActivity(), user1 -> list.addAll(user1));
-            listViewModel.getUser(String.valueOf(editText_username.getText())).observe((LifecycleOwner) getActivity(), user1 -> list.add(user1));
-
-            if(list != null && !list.isEmpty()) {
+            listViewModel.getUser(String.valueOf(editText_username.getText())).observe((LifecycleOwner) activity, user1 -> {
+                list.add(user1);
                 sharedPreferences.edit()
                         .putInt("id", list.get(0).getUser_id())
                         .putString("username", String.valueOf(editText_username.getText()))
                         .putString("last_coordinates", list.get(0).getLast_location().latitudine+";"+ list.get(0).getLast_location().longitudine)
                         .apply();
                 Toast.makeText(getContext(), list.get(0).getLast_location().toString(), Toast.LENGTH_SHORT).show();
-            }
+
+            });
+
         });
     }
 }
