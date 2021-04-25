@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,7 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,8 +116,9 @@ public class MapsHome extends Fragment {
                 textView.setText(busStop.getName());
 
                 getView().findViewById(R.id.btn_see_bus).setOnClickListener(e ->{
-                   Intent intent = new Intent(getContext(), BusStopActivity.class);
-                    startActivity(intent);
+                  /* Intent intent = new Intent(getContext(), BusStopActivity.class);
+                   intent.putExtra("bus_object", (Serializable) busStop);
+                    startActivity(intent);*/
                 });
 
             }
