@@ -26,6 +26,8 @@
         </activity>
         <activity android:name=".AddActivity" />
         <activity android:name=".BusStopActivity" />
+        <activity android:name=".AddBusActivity" />
+
     </application>
 
 </manifest>

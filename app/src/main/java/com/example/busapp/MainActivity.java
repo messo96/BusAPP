@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                 if(trans){
                     transaction = getSupportFragmentManager().beginTransaction();
                     transaction.replace(R.id.fragment_container_view, selectedFragment, nameFragment);
-                    transaction.addToBackStack(nameFragment);
+                    //transaction.addToBackStack(nameFragment);
                     transaction.commit();
                 }
 

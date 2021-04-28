@@ -7,12 +7,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,11 +32,6 @@ import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
-import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class MapsHome extends Fragment {
@@ -106,7 +99,7 @@ public class MapsHome extends Fragment {
         marker.setPosition(new GeoPoint(busStop.getPosition().getLatitudine(), busStop.getPosition().getLongitudine()));
         marker.setIcon(getResources().getDrawable(R.drawable.ic_baseline_bus_alert_24));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marker.setInfoWindow(new InfoWindow(R.layout.instance_bus_stop, map){
+        marker.setInfoWindow(new InfoWindow(R.layout.marker_bus_stop, map){
 
             @Override
             public void onOpen(Object item) {
@@ -116,9 +109,9 @@ public class MapsHome extends Fragment {
                 textView.setText(busStop.getName());
 
                 getView().findViewById(R.id.btn_see_bus).setOnClickListener(e ->{
-                  /* Intent intent = new Intent(getContext(), BusStopActivity.class);
-                   intent.putExtra("bus_object", (Serializable) busStop);
-                    startActivity(intent);*/
+                  Intent intent = new Intent(getContext(), BusStopActivity.class);
+                   intent.putExtra("busStop_id", busStop.getBus_stop_id());
+                    startActivity(intent);
                 });
 
             }

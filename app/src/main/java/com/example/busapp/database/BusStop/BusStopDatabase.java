@@ -6,17 +6,20 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+import com.example.busapp.database.Bus.Bus;
+import com.example.busapp.database.Bus.BusDAO;
 import com.example.busapp.database.User;
 import com.example.busapp.database.UserDAO;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {BusStop.class, User.class}, version = 2)
+@Database(entities = {BusStop.class, User.class, Bus.class}, version = 2)
 public abstract class BusStopDatabase extends RoomDatabase {
 
         public abstract UserDAO userDAO();
         public abstract BusStopDAO busStopDAO();
+        public abstract BusDAO busDAO();
         private static volatile BusStopDatabase INSTANCE;
         private static final int NUMBER_OF_THREADS = 4;
 
