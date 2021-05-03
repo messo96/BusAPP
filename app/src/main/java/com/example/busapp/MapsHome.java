@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -13,16 +14,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 
+import com.example.busapp.Utils.BusStopInfoWindows;
 import com.example.busapp.Utils.Coordinates;
+import com.example.busapp.database.Bus.Bus;
+import com.example.busapp.database.Bus.BusRepository;
+import com.example.busapp.database.Bus.BusSimple;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
+import com.example.busapp.database.User;
+import com.example.busapp.database.UserRepository;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -33,12 +43,17 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 public class MapsHome extends Fragment {
     private MapView map;
     private IMapController mapController;
     private SharedPreferences sharedPreferences;
     private BusStopRepository busStopRepository;
+    private BusRepository busRepository;
+    private UserRepository userRepository;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,6 +61,8 @@ public class MapsHome extends Fragment {
         setHasOptionsMenu(true);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         busStopRepository = new BusStopRepository(getActivity().getApplication());
+        busRepository = new BusRepository(getActivity().getApplication());
+        userRepository = new UserRepository(getActivity().getApplication());
 
     }
 
@@ -99,31 +116,8 @@ public class MapsHome extends Fragment {
         marker.setPosition(new GeoPoint(busStop.getPosition().getLatitudine(), busStop.getPosition().getLongitudine()));
         marker.setIcon(getResources().getDrawable(R.drawable.ic_baseline_bus_alert_24));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marker.setInfoWindow(new InfoWindow(R.layout.marker_bus_stop, map){
-
-            @Override
-            public void onOpen(Object item) {
-                ImageView imageView = getView().findViewById(R.id.image_busStop);
-                imageView.setImageBitmap(BitmapFactory.decodeByteArray(busStop.getImage(), 0, busStop.getImage().length));
-                TextView textView = getView().findViewById(R.id.number_bus);
-                textView.setText(busStop.getName());
-
-                getView().findViewById(R.id.btn_see_bus).setOnClickListener(e ->{
-                  Intent intent = new Intent(getContext(), BusStopActivity.class);
-                   intent.putExtra("busStop_id", busStop.getBus_stop_id());
-                    startActivity(intent);
-                });
-
-            }
-
-            @Override
-            public void onClose() {
-
-            }
-        });
+        marker.setInfoWindow(new BusStopInfoWindows(getActivity(), R.layout.marker_bus_stop, map, busRepository, busStop, userRepository));
         map.getOverlays().add(marker);
-
-
 
     }
 

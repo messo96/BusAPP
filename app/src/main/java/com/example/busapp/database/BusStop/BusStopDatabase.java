@@ -14,7 +14,7 @@ import com.example.busapp.database.UserDAO;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {BusStop.class, User.class, Bus.class}, version = 2)
+@Database(entities = {BusStop.class, User.class, Bus.class}, version = 3)
 public abstract class BusStopDatabase extends RoomDatabase {
 
         public abstract UserDAO userDAO();

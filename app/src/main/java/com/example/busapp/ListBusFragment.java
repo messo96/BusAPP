@@ -2,6 +2,7 @@ package com.example.busapp;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
@@ -18,8 +20,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.busapp.RecyclerView.BusAdapter;
+import com.example.busapp.Utils.Day;
 import com.example.busapp.database.Bus.Bus;
 import com.example.busapp.database.Bus.BusRepository;
+import com.example.busapp.database.Bus.BusSimple;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
 
@@ -28,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ListBus extends Fragment {
+public class ListBusFragment extends Fragment {
     private BusAdapter busAdapter;
     private BusRepository busRepository;
     private RecyclerView recyclerView;
@@ -51,14 +55,14 @@ public class ListBus extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", 0);
 
-        setRecyclerView(getActivity());
 
-        busRepository.getBus(id_busStop).observe((LifecycleOwner) getActivity(), new Observer<List<Bus>>() {
+        setRecyclerView(getActivity());
+        busRepository.getBus(id_busStop).observe((LifecycleOwner) getActivity(), new Observer<List<BusSimple>>() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
-            public void onChanged(List<Bus> bus) {
+            public void onChanged(List<BusSimple> bus) {
                 if(!bus.isEmpty()) {
-                    Toast.makeText(getContext(), bus.get(0).getNumber(), Toast.LENGTH_SHORT).show();
-                    busAdapter.setData(bus);
+                    busAdapter.setData(bus, busRepository);
                 }
 
             }
@@ -66,7 +70,7 @@ public class ListBus extends Fragment {
 
         view.findViewById(R.id.fab_add_bus).setOnClickListener(w ->{
             Intent intent = new Intent(getContext(), AddBusActivity.class);
-            intent.putExtra("id_bus_stop", id_busStop);
+            intent.putExtra("busStop_id", id_busStop);
             startActivity(intent);
         });
 

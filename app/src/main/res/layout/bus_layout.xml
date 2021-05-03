@@ -12,6 +12,7 @@
     app:strokeColor="@color/material_on_surface_stroke">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/viewgroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -23,14 +24,17 @@
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:text="number of bus"
+            android:gravity="center"
             android:textAppearance="?attr/textAppearanceHeadline6" />
 
+
         <TextView
-            android:id="@+id/orario_bus_card"
+            android:id="@+id/creator_bus_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
-            android:text="orario"
+            android:text="Found by: "
+            android:gravity="right"
             android:textAppearance="?attr/textAppearanceBody2" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>

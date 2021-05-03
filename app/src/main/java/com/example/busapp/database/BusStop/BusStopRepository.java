@@ -5,6 +5,8 @@ import android.app.Application;
 import androidx.lifecycle.LiveData;
 
 
+import com.example.busapp.database.Bus.BusSimple;
+
 import java.util.List;
 
 public class BusStopRepository {
@@ -32,6 +34,7 @@ public class BusStopRepository {
             }
         });
     }
+
 
 
 }

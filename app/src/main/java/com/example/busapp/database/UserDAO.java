@@ -22,6 +22,11 @@ public interface UserDAO {
     @Query("SELECT * FROM User WHERE username= :username")
     LiveData<User> getUserFromUsername(final String username);
 
+    @Query("SELECT username FROM User WHERE user_id = :idUser")
+    LiveData<String>  getUserFromIdUser(final int idUser);
+
+
+
     @Query("DELETE FROM User")
     void deleteAll();
 

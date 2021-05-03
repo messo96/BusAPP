@@ -160,8 +160,14 @@ public class AddFragment extends Fragment {
 
     private void startLocationUpdates(Activity activity) {
         String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
-        if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED){
+            LocationManager lm = (LocationManager)getContext().getSystemService(Context.LOCATION_SERVICE);
+            if(!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                showDialog(activity);
+            }
+
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        }
         else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
             showDialog(activity);
         else
@@ -172,10 +178,10 @@ public class AddFragment extends Fragment {
 
     private void showDialog(Activity activity) {
         new AlertDialog.Builder(activity)
-                .setMessage("You have denied the permission, but this need to be app works :(")
+                .setMessage("GPS is disabled, please enable for track the bus stop!")
                 .setCancelable(false)
-                .setPositiveButton("Enable now!", (dialog, id) -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
-                .setNegativeButton("Cancel", (dialog, id) -> dialog.cancel())
+                .setPositiveButton("Enable now : )", (dialog, id) -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                .setNegativeButton("Cancel ", (dialog, id) -> dialog.cancel())
                 .create()
                 .show();
     }

@@ -15,7 +15,7 @@ import static androidx.room.ForeignKey.CASCADE;
         parentColumns   = "bus_stop_id",
         childColumns    = "id_busStop", onDelete = CASCADE) })
 public class Bus {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     private int id_bus;
 
     private String number;
@@ -52,3 +52,5 @@ public class Bus {
         return id_busStop;
     }
 }
+
+

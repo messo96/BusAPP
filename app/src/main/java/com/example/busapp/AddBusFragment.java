@@ -1,6 +1,10 @@
 package com.example.busapp;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +17,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.example.busapp.Utils.Week;
 import com.example.busapp.database.Bus.Bus;
 import com.example.busapp.database.Bus.BusRepository;
-import com.google.android.material.tabs.TabItem;
 
 public class AddBusFragment extends Fragment {
     BusRepository busRepository;
@@ -45,8 +47,8 @@ public class AddBusFragment extends Fragment {
            //Toast.makeText(getContext(), String.valueOf(timePicker.getCurrentHour()), Toast.LENGTH_SHORT).show();
 
         view.findViewById(R.id.button_add_bus_stop).setOnClickListener(c ->{
-            if(!text_number_bus.getText().equals("")){
-                int id_busStop = getActivity().getIntent().getIntExtra("id_bus_stop", 0);
+            if(!text_number_bus.getText().toString().matches("")){
+                int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", 0);
                 String name_bus = String.valueOf(text_number_bus.getText());
                 String day = day_spinner.getSelectedItem().toString();
                 String hour = timePicker.getCurrentHour() + ":"+timePicker.getCurrentMinute();
@@ -56,6 +58,15 @@ public class AddBusFragment extends Fragment {
                 Toast.makeText(getContext(), "Bus" + name_bus + " added :)", Toast.LENGTH_LONG).show();
                 FragmentManager frag = getActivity().getSupportFragmentManager();
                     frag.popBackStack();
+            }
+            else{
+                new AlertDialog.Builder(getActivity())
+                        .setMessage("You must write the name or number of the bus")
+                        .setCancelable(false)
+                        .setPositiveButton("Ok, sorry", (dialog, id) -> dialog.cancel())
+                        .setNegativeButton("No I won't", (dialog, id) -> getActivity().getSupportFragmentManager().popBackStack())
+                        .create()
+                        .show();
             }
         });
 

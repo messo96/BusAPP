@@ -5,10 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.example.busapp.Utils.Utilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        AppCompatActivity activity = this;
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.nav_view);
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -51,10 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if(trans){
-                    transaction = getSupportFragmentManager().beginTransaction();
-                    transaction.replace(R.id.fragment_container_view, selectedFragment, nameFragment);
-                    //transaction.addToBackStack(nameFragment);
-                    transaction.commit();
+                    Utilities.insertFragment(activity, selectedFragment, nameFragment, R.id.fragment_container_view);
                 }
 
 

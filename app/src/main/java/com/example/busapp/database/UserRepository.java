@@ -40,6 +40,8 @@ public class UserRepository {
         return userDAO.getUserFromUsername(username);
     }
 
+    public LiveData<String> getUserFromId(final int idUser) {return userDAO.getUserFromIdUser(idUser); }
+
 
     public void deleteAll(){
         BusStopDatabase.databaseWriterExecutor.execute(new Runnable() {
