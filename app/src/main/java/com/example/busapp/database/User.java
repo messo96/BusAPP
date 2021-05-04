@@ -13,10 +13,14 @@ public class User {
     public int user_id;
 
     private String username;
+    private String email;
+    private String password;
     @Embedded private Coordinates last_location;
 
-    public User(String username, Coordinates last_location) {
+    public User(String username, String email, String password, Coordinates last_location) {
         this.username = username;
+        this.email = email;
+        this.password = password;
         this.last_location = last_location;
     }
 
@@ -35,5 +39,13 @@ public class User {
 
     public Coordinates getLast_location() {
         return last_location;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

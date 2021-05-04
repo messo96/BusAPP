@@ -85,9 +85,12 @@ public class MapsHome extends Fragment {
             GeoPoint lastPosition = new GeoPoint(coordinates.getLatitudine(), coordinates.getLongitudine());
 
             mapSetup(lastPosition);
-           busStopRepository.getAll().observe((LifecycleOwner) getActivity(), busStops -> {
-               for (BusStop busStop : busStops){
-                   addMarker(busStop);
+           busStopRepository.getAll().observe((LifecycleOwner) getActivity(), new Observer<List<BusStop>>() {
+               @Override
+               public void onChanged(List<BusStop> busStops) {
+                   for (BusStop busStop : busStops){
+                       addMarker(busStop);
+                   }
                }
            });
 

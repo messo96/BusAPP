@@ -33,7 +33,6 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
 
     private List<String> busList = new ArrayList<>();
     private Activity activity;
-    private BusRepository busRepository;
 
     public BusAdapter(Activity activity){
         this.activity = activity;
@@ -66,9 +65,8 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void setData(List<BusSimple> list, BusRepository busRepository) {
+    public void setData(List<BusSimple> list) {
         this.busList = list.stream().map(b -> b.getNumber()).distinct().collect(Collectors.toList());
-        this.busRepository = busRepository;
         notifyDataSetChanged();
     }
 

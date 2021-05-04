@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
@@ -31,10 +32,15 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 
 import com.example.busapp.Utils.Coordinates;
+import com.example.busapp.Utils.Utilities;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -45,6 +51,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 import static android.app.Activity.RESULT_OK;
@@ -84,47 +91,59 @@ public class AddFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Activity activity = getActivity();
+        if(sharedPreferences.getBoolean("logged", false)) {
+            Activity activity = getActivity();
 
-        if (activity != null) {
-            view.findViewById(R.id.button_camera_bus).setOnClickListener(e ->{
-                uploadImage();
-            });
+            if (activity != null) {
+                view.findViewById(R.id.button_camera_bus).setOnClickListener(e -> {
+                    uploadImage();
+                });
 
-            view_position = activity.findViewById(R.id.edit_text_position);
-            EditText editText_busNumber = view.findViewById(R.id.edit_text_number_bus);
-            initializeLocation(getActivity());
-            activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
-                    new ActivityResultCallback<Boolean>() {
-                        @Override
-                        public void onActivityResult(Boolean result) {
-                            if (result) {
-                                Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
-                                startLocationUpdates(getActivity());
-                                Log.d("LAB", "PERMISSION GRANTED GPS");
-                            } else {
-                                Log.d("LAB", "PERMISSION DENIED GPS");
-                                showDialog(activity);
+                view_position = activity.findViewById(R.id.edit_text_position);
+                EditText editText_busNumber = view.findViewById(R.id.edit_text_number_bus);
+                initializeLocation(getActivity());
+                activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                        new ActivityResultCallback<Boolean>() {
+                            @Override
+                            public void onActivityResult(Boolean result) {
+                                if (result) {
+                                    Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
+                                    startLocationUpdates(getActivity());
+                                    Log.d("GPS_LOG", "PERMISSION GRANTED GPS");
+                                } else {
+                                    Log.d("GPS_LOG", "PERMISSION DENIED GPS");
+                                    showDialog(activity);
+                                }
                             }
+                        });
+
+                view.findViewById(R.id.button_gps).setOnClickListener(c -> {
+                    startLocationUpdates(activity);
+                });
+                view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
+                    int id = sharedPreferences.getInt("id", 0);
+                    if (coordinates != null && editText_busNumber.getText() != null && image != null) {
+                        if (id == 0)
+                            Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
+                        else {
+                            busStopRepository.addBusStop(new BusStop(sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image));
+                            Toast.makeText(getContext(), "Bus Stop created successfully", Toast.LENGTH_SHORT).show();
+                            getActivity().getSupportFragmentManager().popBackStack();
                         }
-                    });
 
-            view.findViewById(R.id.button_gps).setOnClickListener(c -> {
-                startLocationUpdates(activity);
+                    }
+                });
+            }
 
-            });
-            view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
-                int id = sharedPreferences.getInt("id", 0);
-                if (coordinates != null && editText_busNumber.getText() != null && image != null) {
-                    if (id == 0)
-                        Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
-                    else
-                        busStopRepository.addBusStop(new BusStop(sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image));
-
-                }
-            });
         }
-
+        else{
+            new AlertDialog.Builder(getContext()).setMessage("You must be logged for create new Bus Stop.")
+                    .setPositiveButton("Ok ,log me in", (dialog, id) -> {
+                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true), "ProfileFragment", R.id.fragment_container_view);
+                    })
+                    .setNegativeButton("No, i won't", (dialog, id) -> dialog.cancel())
+                    .create().show();
+        }
 
     }
 
@@ -133,7 +152,7 @@ public class AddFragment extends Fragment {
         locationRequest = LocationRequest.create();
         locationRequest.setInterval(1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setNumUpdates(1);
+
 
         locationCallback = new LocationCallback() {
             @Override
@@ -141,13 +160,39 @@ public class AddFragment extends Fragment {
                 super.onLocationResult(locationResult);
 
                 Toast.makeText(activity.getApplicationContext(), "Position getted", Toast.LENGTH_SHORT).show();
+
                 try {
                     Address location = geocoder.getFromLocation(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude(), 1).get(0);
-                    view_position.setText(location.getAddressLine(0));
-                    coordinates = new Coordinates(location.getLatitude(), location.getLongitude());
-                    sharedPreferences.edit()
-                            .putString("last_coordinates", coordinates.toString())
-                            .apply();
+
+                    busStopRepository.getAll().observe((LifecycleOwner) activity, new Observer<List<BusStop>>() {
+                        boolean stillExist = false;
+                        @Override
+                        public void onChanged(List<BusStop> busStops) {
+                            for(BusStop bus : busStops){
+                                if(location.getLongitude() == bus.getPosition().getLongitudine() && location.getLatitude() == bus.getPosition().getLatitudine()){
+                                    stillExist = true;
+                                    break;
+                                }
+                            }
+                            if(stillExist){
+                                new AlertDialog.Builder(getContext())
+                                        .setMessage("The Bus Stop in this position is already been created, please go to another. ")
+                                        .setPositiveButton("Ok", ((dialog, which) -> dialog.cancel()))
+                                        .create()
+                                        .show();
+                            }
+                            else{
+                                view_position.setText(location.getAddressLine(0));
+                                coordinates = new Coordinates(location.getLatitude(), location.getLongitude());
+                                sharedPreferences.edit()
+                                        .putString("last_coordinates", coordinates.toString())
+                                        .apply();
+                            }
+                            locationRequest.setNumUpdates(1);
+
+                        }
+                    });
+
 
                 } catch (IOException e) {
                     e.printStackTrace();

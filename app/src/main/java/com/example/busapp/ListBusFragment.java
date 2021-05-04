@@ -62,7 +62,7 @@ public class ListBusFragment extends Fragment {
             @Override
             public void onChanged(List<BusSimple> bus) {
                 if(!bus.isEmpty()) {
-                    busAdapter.setData(bus, busRepository);
+                    busAdapter.setData(bus);
                 }
 
             }

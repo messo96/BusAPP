@@ -25,6 +25,11 @@ public interface UserDAO {
     @Query("SELECT username FROM User WHERE user_id = :idUser")
     LiveData<String>  getUserFromIdUser(final int idUser);
 
+    @Query("SELECT count(*) FROM User WHERE email = :email")
+    LiveData<Integer> checkIfUserExist(final String email);
+
+    @Query("SELECT * FROM User WHERE email = :email AND password = :password")
+    LiveData<User> login(String email, String password);
 
 
     @Query("DELETE FROM User")

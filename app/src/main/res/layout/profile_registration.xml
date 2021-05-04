@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+
+   <EditText
+       android:id="@+id/username_registration"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:hint="Username"
+       android:inputType="textPersonName"
+       android:layout_margin="10dp"
+       android:gravity="center"
+       />
+
+   <EditText
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+      android:id="@+id/email_registration"
+      android:hint="Email"
+      android:inputType="textEmailAddress"
+      android:gravity="center"
+      />
+
+   <EditText
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:id="@+id/password_registration"
+       android:hint="Password"
+       android:inputType="textPassword"
+       android:gravity="center"
+       />
+
+
+
+   <com.google.android.material.button.MaterialButton
+       android:id="@+id/button_registration_user"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="36dp"
+      android:text="Register" />
+
+
+   <TextView
+       android:id="@+id/redirect_login"
+       android:layout_width="match_parent"
+       android:layout_height="200dp"
+      android:text="Login"
+      android:gravity="right|bottom" />
+
+
+
+</androidx.appcompat.widget.LinearLayoutCompat>

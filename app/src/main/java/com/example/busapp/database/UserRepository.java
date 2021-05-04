@@ -42,6 +42,10 @@ public class UserRepository {
 
     public LiveData<String> getUserFromId(final int idUser) {return userDAO.getUserFromIdUser(idUser); }
 
+    public LiveData<Integer> checkUser(final String email) { return userDAO.checkIfUserExist(email);}
+
+    public LiveData<User> login(final String email, final String password) { return userDAO.login(email, password);}
+
 
     public void deleteAll(){
         BusStopDatabase.databaseWriterExecutor.execute(new Runnable() {
