@@ -2,13 +2,22 @@ package com.example.busapp;
 
 import android.Manifest;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +25,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -35,6 +47,11 @@ import com.example.busapp.database.BusStop.BusStopRepository;
 import com.example.busapp.database.DbConnector;
 import com.example.busapp.database.User;
 import com.example.busapp.database.UserRepository;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -49,9 +66,11 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 
@@ -60,9 +79,11 @@ public class MapsHome extends Fragment {
     private IMapController mapController;
     private SharedPreferences sharedPreferences;
     private FirebaseFirestore db;
-   // private BusStopRepository busStopRepository;
-   // private BusRepository busRepository;
-   // private UserRepository userRepository;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
+    private ActivityResultLauncher<String> activityResultLauncher;
+    private Geocoder geocoder;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,9 +91,9 @@ public class MapsHome extends Fragment {
         setHasOptionsMenu(true);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         db = FirebaseFirestore.getInstance();
-       // busStopRepository = new BusStopRepository(getActivity().getApplication());
-       // busRepository = new BusRepository(getActivity().getApplication());
-       // userRepository = new UserRepository(getActivity().getApplication());
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        geocoder = new Geocoder(getContext(), Locale.getDefault());
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
     }
 
@@ -91,6 +112,23 @@ public class MapsHome extends Fragment {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
         }
         else {
+            initializeLocation(getActivity());
+            activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    new ActivityResultCallback<Boolean>() {
+                        @Override
+                        public void onActivityResult(Boolean result) {
+                            if (result) {
+                                Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
+                                startLocationUpdates(getActivity());
+                                Log.d("GPS_LOG", "PERMISSION GRANTED GPS");
+                            } else {
+                                Log.d("GPS_LOG", "PERMISSION DENIED GPS");
+                                showDialog(getActivity());
+                            }
+                        }
+                    });
+
+
             String position = sharedPreferences.getString("last_coordinates",new Coordinates((float)48.8583, (float)2.2944 ).toString());
             Coordinates coordinates = new Coordinates(Double.parseDouble(position.split(";")[0]), Double.parseDouble(position.split(";")[1]));
             GeoPoint lastPosition = new GeoPoint(coordinates.getLatitudine(), coordinates.getLongitudine());
@@ -109,6 +147,13 @@ public class MapsHome extends Fragment {
            });
 */
 
+
+            view.findViewById(R.id.btn_current_gps).setOnClickListener(l ->{
+                initializeLocation(getActivity());
+                Toast.makeText(getContext(), "Finding your position...", Toast.LENGTH_SHORT).show();
+                startLocationUpdates(getActivity());
+
+            });
         }
 }
 
@@ -121,7 +166,7 @@ public class MapsHome extends Fragment {
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.ALWAYS);
         map.setMultiTouchControls(true);
 
-        IMapController mapController = map.getController();
+        mapController = map.getController();
         mapController.setZoom(17.0);
        //Toast.makeText(getContext(), position, Toast.LENGTH_SHORT).show();
         mapController.setCenter(startPosition);
@@ -157,5 +202,58 @@ public class MapsHome extends Fragment {
 
         return list;
     }
+
+
+
+    private void initializeLocation(Activity activity) {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setNumUpdates(1);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                mapController.animateTo(new GeoPoint(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
+                Toast.makeText(getContext(), "Done.", Toast.LENGTH_SHORT).show();
+
+            }
+        };
+    }
+
+    private void startLocationUpdates(Activity activity) {
+        String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
+        if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED){
+            LocationManager lm = (LocationManager)getContext().getSystemService(Context.LOCATION_SERVICE);
+            if(!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                showDialog(activity);
+            }
+
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        }
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
+            showDialog(activity);
+        else
+            activityResultLauncher.launch(PERMISSION_REQUESTED);
+
+
+    }
+
+
+
+            private void showDialog(Activity activity) {
+                new AlertDialog.Builder(activity)
+                        .setMessage("GPS is disabled, please enable for track the bus stop!")
+                        .setCancelable(false)
+                        .setPositiveButton("Enable now : )", (dialog, id) -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                        .setNegativeButton("Cancel ", (dialog, id) -> dialog.cancel())
+                        .create()
+                        .show();
+            }
+
+
+
 
 }

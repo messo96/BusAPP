@@ -63,9 +63,11 @@ public class AddTimeFragment extends Fragment {
             map.put("id_creator", id_creator);
             map.put("time", hour);
 
+
             db.collection("Time").add(map)
                     .addOnSuccessListener(s -> {
                         Toast.makeText(getContext(), "Time added successfully", Toast.LENGTH_LONG).show();
+                        getActivity().onBackPressed();
 
                     })
                     .addOnFailureListener(f -> Toast.makeText(getContext(), "Error, can't add Time", Toast.LENGTH_LONG).show());

@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.busapp.AddBusFragment;
 import com.example.busapp.AddFragment;
+import com.example.busapp.AddTimeFragment;
 import com.example.busapp.DetailBusFragment;
 import com.example.busapp.ListBusFragment;
 
@@ -19,8 +21,9 @@ public class Utilities {
         transaction.replace(idContainer, fragment, tag);
 
         //add the transaction to the back stack so the user can navigate back
-        if( !(fragment instanceof AddFragment) && !(fragment instanceof ListBusFragment) && !(fragment instanceof DetailBusFragment) )
-           transaction.addToBackStack(tag);
+        if( !(fragment instanceof AddFragment) && !(fragment instanceof ListBusFragment)
+                && !(fragment instanceof DetailBusFragment)  && !(fragment instanceof AddBusFragment) && !(fragment instanceof AddTimeFragment))
+            transaction.addToBackStack(tag);
 
 
         // Commit the transaction

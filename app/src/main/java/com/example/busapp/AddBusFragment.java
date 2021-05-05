@@ -44,7 +44,9 @@ public class AddBusFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        busRepository = new BusRepository(getActivity().getApplication());
+        if(getActivity() != null)
+            busRepository = new BusRepository(getActivity().getApplication());
+
         db = FirebaseFirestore.getInstance();
     }
 
@@ -61,39 +63,42 @@ public class AddBusFragment extends Fragment {
         Context context = getContext();
         EditText text_number_bus = view.findViewById(R.id.text_number_bus);
 
-        view.findViewById(R.id.button_add_bus_stop).setOnClickListener(c -> {
-            if (!text_number_bus.getText().toString().matches("")) {
-                int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", -1);
-                int id_user = getActivity().getIntent().getIntExtra("id", -1);
-                String name_bus = String.valueOf(text_number_bus.getText());
-                db.collection("Bus").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        boolean stillExist = false;
-                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
-                            if (Integer.parseInt(String.valueOf(q.get("busStop_id"))) == id_busStop
-                                    && String.valueOf(q.get("name_bus")).matches(name_bus)) {
-                                stillExist = true;
-                                break;
+            view.findViewById(R.id.button_add_bus_stop).setOnClickListener(c -> {
+                if (!text_number_bus.getText().toString().matches("") && getActivity() != null){
+                    int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", -1);
+                    int id_user = getActivity().getIntent().getIntExtra("id", -1);
+                    String name_bus = String.valueOf(text_number_bus.getText());
+                    db.collection("Bus").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            boolean stillExist = false;
+                            for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                                if (Integer.parseInt(String.valueOf(q.get("busStop_id"))) == id_busStop
+                                        && String.valueOf(q.get("name_bus")).matches(name_bus)) {
+                                    stillExist = true;
+                                    break;
+                                }
                             }
-                        }
-                        if (stillExist) {
-                            Toast.makeText(context, "Sorry but this bus still exist", Toast.LENGTH_LONG).show();
-                        } else {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("name_bus", name_bus);
-                            map.put("busStop_id", id_busStop);
-                            map.put("id_creator", id_user);
-                            db.collection("Bus").add(map)
-                                    .addOnSuccessListener(l -> Toast.makeText(context, "Bus " + name_bus + " added successfully!", Toast.LENGTH_LONG).show())
-                                    .addOnFailureListener(l -> Toast.makeText(context, "Can't create this bus.", Toast.LENGTH_LONG).show());
-                        }
+                            if (stillExist) {
+                                Toast.makeText(context, "Sorry but this bus still exist", Toast.LENGTH_LONG).show();
+                            } else {
+                                Map<String, Object> map = new HashMap<>();
+                                map.put("name_bus", name_bus);
+                                map.put("busStop_id", id_busStop);
+                                map.put("id_creator", id_user);
+                                db.collection("Bus").add(map)
+                                        .addOnSuccessListener(l -> {
+                                            Toast.makeText(context, "Bus " + name_bus + " added successfully!", Toast.LENGTH_LONG).show();
+                                            getActivity().onBackPressed();
+                                        })
+                                        .addOnFailureListener(l -> Toast.makeText(context, "Can't create this bus.", Toast.LENGTH_LONG).show());
+                            }
 
-                    }
-                });
+                        }
+                    });
 
-            }
-        });
+                }
+            });
     }
 
 }

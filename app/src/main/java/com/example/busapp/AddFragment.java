@@ -155,7 +155,7 @@ public class AddFragment extends Fragment {
                                     map.put("bus_stop_id", task.getResult().size());
                                     db.collection("BusStop").add(map).addOnSuccessListener(l -> {
                                         Toast.makeText(getContext(), "Bus Stop " + String.valueOf(editText_busNumber.getText()) + " created successfully", Toast.LENGTH_SHORT).show();
-                                        getActivity().getSupportFragmentManager().popBackStack();
+                                        getActivity().onBackPressed();
 
                                     }).addOnFailureListener(l -> {
                                         Toast.makeText(getContext(), "Can't create Bus Stop", Toast.LENGTH_SHORT).show();
