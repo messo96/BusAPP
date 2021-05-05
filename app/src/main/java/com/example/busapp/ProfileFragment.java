@@ -24,11 +24,23 @@ import androidx.lifecycle.ViewModelStoreOwner;
 import com.example.busapp.Utils.Coordinates;
 import com.example.busapp.Utils.Utilities;
 import com.example.busapp.ViewModel.ListViewModel;
+import com.example.busapp.database.DbConnector;
 import com.example.busapp.database.User;
 import com.example.busapp.database.UserRepository;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
     public class ProfileFragment extends Fragment {
@@ -37,6 +49,9 @@ import java.util.List;
         private ListViewModel listViewModel;
         private List<User> list = new ArrayList<>();
         boolean login;
+        private FirebaseFirestore db;
+
+
 
         public ProfileFragment(final boolean flagLogin) {
             super();
@@ -49,6 +64,9 @@ import java.util.List;
             setHasOptionsMenu(true);
             userRepository = new UserRepository(getActivity().getApplication());
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            db = FirebaseFirestore.getInstance();
+
+
         }
 
         @Nullable
@@ -84,11 +102,43 @@ import java.util.List;
                 listViewModel = new ViewModelProvider((ViewModelStoreOwner) getActivity()).get(ListViewModel.class);
                 Activity activity = getActivity();
 
-                editText_username.setText(sharedPreferences.getString("username", "Username"));
-
 
                 editText_username.setText(sharedPreferences.getString("username", "Username"));
                 button_save.setOnClickListener(l -> {
+                    User user = new User(String.valueOf(editText_username.getText()), String.valueOf(email.getText()), String.valueOf(password.getText()), new Coordinates(43.4, 343.3));
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("username", user.getUsername());
+                    map.put("email", user.getEmail());
+                    map.put("password", user.getPassword());
+
+                    Task<QuerySnapshot> tResult = db.collection("User")
+                            .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                             @Override
+                                                             public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                 map.put("id", task.getResult().size());
+
+                                                                 db.collection("User").add(map)
+                                                                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                                             @Override
+                                                                             public void onSuccess(DocumentReference documentReference) {
+                                                                                 Toast.makeText(getContext(), "User created successfully", Toast.LENGTH_LONG).show();
+                                                                                 sharedPreferences.edit()
+                                                                                         .putInt("id", Integer.parseInt(String.valueOf(map.get("id"))))
+                                                                                         .putString("email", String.valueOf(email.getText()))
+                                                                                         .putBoolean("logged", true)
+                                                                                         .apply();
+                                                                             }
+                                                                         })
+                                                                         .addOnFailureListener(new OnFailureListener() {
+                                                                             @Override
+                                                                             public void onFailure(@NonNull Exception e) {
+                                                                                 new AlertDialog.Builder(getContext()).setMessage("Cannot create User\nThis email is already registered").show();
+                                                                             }
+                                                                         });
+                                                             }
+                                                         });
+
+                    /*
                     userRepository.checkUser(String.valueOf(email.getText())).observe((LifecycleOwner) activity, new Observer<Integer>() {
                         @Override
                         public void onChanged(Integer count) {
@@ -103,8 +153,10 @@ import java.util.List;
                             }
                         }
                     });
-                });
 
+                    */
+
+                });
 
             } else { // Login
                 EditText email = view.findViewById(R.id.email_login);
@@ -125,6 +177,40 @@ import java.util.List;
                     button_save.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            String sEmail = String.valueOf(email.getText());
+                            String sPassword = String.valueOf(password.getText());
+                            Task<QuerySnapshot> tResult = db.collection("User").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                boolean check = false;
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    for (QueryDocumentSnapshot query : task.getResult()) {
+                                        if (sEmail.matches(query.getData().get("email").toString())
+                                                && sPassword.matches(query.getData().get("password").toString())) {
+                                            sharedPreferences.edit()
+                                                    .putInt("id", Integer.parseInt(query.get("id").toString()))
+                                                    .putString("email", String.valueOf(email.getText()))
+                                                    .putBoolean("logged", true)
+                                                    .apply();
+                                            check = true;
+                                            break;
+                                        }
+                                    }
+                                    if(check){
+
+                                        Toast.makeText(getContext(), "Logged!", Toast.LENGTH_LONG).show();
+                                        getActivity().getSupportFragmentManager().popBackStack();
+                                    }
+                                    else{
+                                        Toast.makeText(getContext(), "Credential are not correct, please retry!", Toast.LENGTH_LONG).show();
+                                        password.setText("");
+                                    }
+                                }
+                                });
+
+                                }
+                            });
+
+                            /*
                             userRepository.login(String.valueOf(email.getText()), String.valueOf(password.getText())).observe((LifecycleOwner) getActivity(), new Observer<User>() {
                                 @Override
                                 public void onChanged(User user) {
@@ -148,8 +234,8 @@ import java.util.List;
                                 }
 
                             });
-                        }
-                    });
+                            */
+
 
                 }
 

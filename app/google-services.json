@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "874042743343",
+    "firebase_url": "https://busapp-dcabc-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "busapp-dcabc",
+    "storage_bucket": "busapp-dcabc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874042743343:android:964d4b65d938782e0e04da",
+        "android_client_info": {
+          "package_name": "com.example.busapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "874042743343-c8093uca7nkuhksquv70c403uh578l4e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7pYpi3Yj8SNkFTml3OpEmeHgKZakBpQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874042743343-c8093uca7nkuhksquv70c403uh578l4e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

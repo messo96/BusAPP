@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.example.busapp.Utils.Utilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.FirebaseApp;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,11 +27,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);
+
         AppCompatActivity activity = this;
-        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                .edit()
-                .putBoolean("logged", false)
-                .apply();
+      // PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+             //  .edit()
+             // .putBoolean("logged", false)
+             //.apply();
+
         //Map as default
         Utilities.insertFragment(activity, new MapsHome(), "MapsHome", R.id.fragment_container_view);
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.nav_view);

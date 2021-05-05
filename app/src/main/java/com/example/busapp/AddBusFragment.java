@@ -24,24 +24,35 @@ import androidx.lifecycle.Observer;
 import com.example.busapp.Utils.Week;
 import com.example.busapp.database.Bus.Bus;
 import com.example.busapp.database.Bus.BusRepository;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class AddBusFragment extends Fragment {
     BusRepository busRepository;
+    private FirebaseFirestore db;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         busRepository = new BusRepository(getActivity().getApplication());
+        db = FirebaseFirestore.getInstance();
     }
 
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.add_bus_fragment, container, false);
+        return inflater.inflate(R.layout.add_bus_simple_fragment, container, false);
     }
 
     @Override
@@ -49,53 +60,42 @@ public class AddBusFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         Context context = getContext();
         EditText text_number_bus = view.findViewById(R.id.text_number_bus);
-        Spinner day_spinner = view.findViewById(R.id.select_day_spinner);
-        TimePicker timePicker = view.findViewById(R.id.select_hour_time);
-           //Toast.makeText(getContext(), String.valueOf(timePicker.getCurrentHour()), Toast.LENGTH_SHORT).show();
 
-        view.findViewById(R.id.button_add_bus_stop).setOnClickListener(c ->{
-            if(!text_number_bus.getText().toString().matches("")){
-                int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", 0);
+        view.findViewById(R.id.button_add_bus_stop).setOnClickListener(c -> {
+            if (!text_number_bus.getText().toString().matches("")) {
+                int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", -1);
+                int id_user = getActivity().getIntent().getIntExtra("id", -1);
                 String name_bus = String.valueOf(text_number_bus.getText());
-                String day = day_spinner.getSelectedItem().toString();
-                String hour = String.format(Locale.ITALY, "%02d:%02d", timePicker.getCurrentHour(), timePicker.getCurrentMinute());
-
-                busRepository.getHours(id_busStop, name_bus, day_spinner.getSelectedItem().toString()).observe((LifecycleOwner) getActivity(), new Observer<List<String>>() {
+                db.collection("Bus").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onChanged(List<String> strings) {
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         boolean stillExist = false;
-                        for(String h : strings){
-                            if(h.matches(hour)){
+                        for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
+                            if (Integer.parseInt(String.valueOf(q.get("busStop_id"))) == id_busStop
+                                    && String.valueOf(q.get("name_bus")).matches(name_bus)) {
                                 stillExist = true;
                                 break;
                             }
                         }
-                        if(stillExist)
-                            Toast.makeText(context, "This hour for this bus still exist", Toast.LENGTH_LONG).show();
-                        else{
-                            busRepository.addBus(new Bus(name_bus, new Week(day_spinner.getSelectedItem().toString(), hour), id_busStop));
-
-                            Toast.makeText(context, "Bus" + name_bus + " added :)", Toast.LENGTH_LONG).show();
-                            getActivity().getSupportFragmentManager().popBackStack();
-
+                        if (stillExist) {
+                            Toast.makeText(context, "Sorry but this bus still exist", Toast.LENGTH_LONG).show();
+                        } else {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("name_bus", name_bus);
+                            map.put("busStop_id", id_busStop);
+                            map.put("id_creator", id_user);
+                            db.collection("Bus").add(map)
+                                    .addOnSuccessListener(l -> Toast.makeText(context, "Bus " + name_bus + " added successfully!", Toast.LENGTH_LONG).show())
+                                    .addOnFailureListener(l -> Toast.makeText(context, "Can't create this bus.", Toast.LENGTH_LONG).show());
                         }
-                    }
 
+                    }
                 });
 
             }
-            else{
-                new AlertDialog.Builder(getActivity())
-                        .setMessage("You must write the name or number of the bus")
-                        .setCancelable(false)
-                        .setPositiveButton("Ok, sorry", (dialog, id) -> dialog.cancel())
-                        .setNegativeButton("No I won't", (dialog, id) -> getActivity().getSupportFragmentManager().popBackStack())
-                        .create()
-                        .show();
-            }
         });
-
-
-
     }
+
 }
+
+

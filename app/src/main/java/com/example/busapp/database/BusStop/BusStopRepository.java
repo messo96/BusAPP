@@ -36,5 +36,12 @@ public class BusStopRepository {
     }
 
 
-
+    public void deleteAll() {
+        BusStopDatabase.databaseWriterExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                busStopDAO.deleteAll();
+            }
+        });
+    }
 }

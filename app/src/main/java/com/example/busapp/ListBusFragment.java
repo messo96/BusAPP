@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,11 @@ import com.example.busapp.database.Bus.BusRepository;
 import com.example.busapp.database.Bus.BusSimple;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -36,12 +42,14 @@ public class ListBusFragment extends Fragment {
     private BusAdapter busAdapter;
     private BusRepository busRepository;
     private RecyclerView recyclerView;
+    private FirebaseFirestore db;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         busRepository = new BusRepository(getActivity().getApplication());
+        db = FirebaseFirestore.getInstance();
     }
 
     @Nullable
@@ -53,10 +61,30 @@ public class ListBusFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", 0);
-
+        int id_busStop = getActivity().getIntent().getIntExtra("busStop_id", -1);
+        int id_creator = getActivity().getIntent().getIntExtra("id", -1);
 
         setRecyclerView(getActivity());
+
+        db.collection("Bus").whereEqualTo("busStop_id", id_busStop).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                List<Pair<String, Integer>> list = new ArrayList<>();
+                for(QueryDocumentSnapshot q : queryDocumentSnapshots){
+                        list.add(new Pair<>(String.valueOf(q.get("name_bus")), Integer.parseInt(String.valueOf(q.get("id_creator"))) ));
+                }
+                busAdapter.setData(list);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+
+        /*
         busRepository.getBus(id_busStop).observe((LifecycleOwner) getActivity(), new Observer<List<BusSimple>>() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
@@ -68,9 +96,11 @@ public class ListBusFragment extends Fragment {
             }
         });
 
+         */
         view.findViewById(R.id.fab_add_bus).setOnClickListener(w ->{
             Intent intent = new Intent(getContext(), AddBusActivity.class);
             intent.putExtra("busStop_id", id_busStop);
+            intent.putExtra("id", id_creator);
             startActivity(intent);
         });
 

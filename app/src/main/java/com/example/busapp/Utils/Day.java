@@ -7,8 +7,7 @@ public enum Day{
     Giovedì("Giovedì", 3),
     Venerdì("Venerdì", 4),
     Sabato("Sabato", 5),
-    Domenica("Domenica", 6),
-    Undefined("Undefined", 7);
+    Domenica("Domenica", 6);
 
     private int index;
     private String name;
@@ -31,7 +30,7 @@ public enum Day{
             if(d.getIndex() == index)
                 return d;
         }
-        return Day.Undefined;
+        return Day.Domenica;
     }
 
 }

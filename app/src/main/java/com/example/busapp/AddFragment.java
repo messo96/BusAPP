@@ -13,6 +13,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -32,6 +33,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -43,16 +45,27 @@ import com.example.busapp.Utils.Coordinates;
 import com.example.busapp.Utils.Utilities;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
+import com.example.busapp.database.DbConnector;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static android.app.Activity.RESULT_OK;
 import static android.content.Context.LOCATION_SERVICE;
@@ -70,6 +83,7 @@ public class AddFragment extends Fragment {
     private Coordinates coordinates;
     private BusStopRepository busStopRepository;
     private byte[] image;
+    private FirebaseFirestore db;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,6 +93,7 @@ public class AddFragment extends Fragment {
         geocoder = new Geocoder(getContext(), Locale.getDefault());
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         busStopRepository = new BusStopRepository(getActivity().getApplication());
+        db = FirebaseFirestore.getInstance();
     }
 
     @Nullable
@@ -87,9 +102,11 @@ public class AddFragment extends Fragment {
         return inflater.inflate(R.layout.add_fragment, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
 
         if(sharedPreferences.getBoolean("logged", false)) {
             Activity activity = getActivity();
@@ -121,6 +138,36 @@ public class AddFragment extends Fragment {
                     startLocationUpdates(activity);
                 });
                 view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
+                    int id = sharedPreferences.getInt("id", -1);
+                    if (coordinates != null && editText_busNumber.getText() != null && image != null) {
+                        if (id < 0)
+                            Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
+                        else {
+                            BusStop busStop = new BusStop(0, sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image);
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("name", busStop.getName());
+                            map.put("image", Base64.getEncoder().encodeToString(busStop.getImage()));
+                            map.put("position", busStop.getPosition().toString());
+                            map.put("user_created_id", busStop.getUser_created_id());
+                            Task<QuerySnapshot> tResult = db.collection("BusStop").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    map.put("bus_stop_id", task.getResult().size());
+                                    db.collection("BusStop").add(map).addOnSuccessListener(l -> {
+                                        Toast.makeText(getContext(), "Bus Stop " + String.valueOf(editText_busNumber.getText()) + " created successfully", Toast.LENGTH_SHORT).show();
+                                        getActivity().getSupportFragmentManager().popBackStack();
+
+                                    }).addOnFailureListener(l -> {
+                                        Toast.makeText(getContext(), "Can't create Bus Stop", Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+
+
+                    /*
                     int id = sharedPreferences.getInt("id", 0);
                     if (coordinates != null && editText_busNumber.getText() != null && image != null) {
                         if (id == 0)
@@ -132,6 +179,7 @@ public class AddFragment extends Fragment {
                         }
 
                     }
+                    */
                 });
             }
 

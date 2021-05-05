@@ -26,17 +26,14 @@ public class BusStop {
     @Embedded private Coordinates position;
     private byte[] image;
 
-    public BusStop(int user_created_id, String name, Coordinates position, byte[] image) {
+    public BusStop(int bus_stop_id, int user_created_id, String name, Coordinates position, byte[] image) {
+        this.bus_stop_id = bus_stop_id;
         this.user_created_id = user_created_id;
         this.name = name;
         this.position = position;
         this.image = image;
     }
 
-
-    public void setBus_stop_id(int bus_stop_id) {
-        this.bus_stop_id = bus_stop_id;
-    }
 
     public int getBus_stop_id() {
         return bus_stop_id;

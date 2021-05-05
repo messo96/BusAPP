@@ -23,7 +23,7 @@ public class Coordinates{
         return latitudine +";"+longitudine;
     }
 
-    public Coordinates getCoordinatesFromString(String str){
+    public static Coordinates getCoordinatesFromString(String str){
         return new Coordinates(Double.parseDouble(str.split(";",2)[0]), Double.parseDouble(str.split(";",2)[1]));
     }
 }

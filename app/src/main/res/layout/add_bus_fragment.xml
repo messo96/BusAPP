@@ -7,33 +7,15 @@
     android:orientation="vertical">
 
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Insert number of bus(ex. 8):"
-        />
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:id="@+id/text_number_bus"
-        android:inputType="text"
-        android:layout_marginHorizontal="100dp"/>
 
     <TextView
+        android:id="@+id/day_selected"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="Select Day:"
-        android:layout_marginTop="45dp"/>
+        android:layout_margin="45dp"/>
 
-    <Spinner
-        android:id="@+id/select_day_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:entries="@array/day"
-        android:layout_marginBottom="45dp"/>
 
     <TextView
         android:layout_width="match_parent"

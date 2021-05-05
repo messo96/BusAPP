@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.busapp.Utils.Utilities;
+
 public class AddBusActivity extends AppCompatActivity {
 
     @Override
@@ -14,12 +16,7 @@ public class AddBusActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_bus);
 
         if(savedInstanceState == null){
-
-            FragmentTransaction transaction = this.getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.fragment_container_view, new AddBusFragment(), "AddBus");
-            transaction.addToBackStack("AddBus");
-            transaction.commit();
-
+            Utilities.insertFragment(this, new AddBusFragment(), "AddBus", R.id.fragment_container_view);
         }
     }
 

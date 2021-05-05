@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
+import androidx.room.util.DBUtil;
 
 import com.example.busapp.Utils.BusStopInfoWindows;
 import com.example.busapp.Utils.Coordinates;
@@ -31,8 +32,13 @@ import com.example.busapp.database.Bus.BusRepository;
 import com.example.busapp.database.Bus.BusSimple;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
+import com.example.busapp.database.DbConnector;
 import com.example.busapp.database.User;
 import com.example.busapp.database.UserRepository;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -43,6 +49,8 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,18 +59,20 @@ public class MapsHome extends Fragment {
     private MapView map;
     private IMapController mapController;
     private SharedPreferences sharedPreferences;
-    private BusStopRepository busStopRepository;
-    private BusRepository busRepository;
-    private UserRepository userRepository;
+    private FirebaseFirestore db;
+   // private BusStopRepository busStopRepository;
+   // private BusRepository busRepository;
+   // private UserRepository userRepository;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        busStopRepository = new BusStopRepository(getActivity().getApplication());
-        busRepository = new BusRepository(getActivity().getApplication());
-        userRepository = new UserRepository(getActivity().getApplication());
+        db = FirebaseFirestore.getInstance();
+       // busStopRepository = new BusStopRepository(getActivity().getApplication());
+       // busRepository = new BusRepository(getActivity().getApplication());
+       // userRepository = new UserRepository(getActivity().getApplication());
 
     }
 
@@ -72,6 +82,7 @@ public class MapsHome extends Fragment {
         return inflater.inflate(R.layout.maps_home, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -85,7 +96,10 @@ public class MapsHome extends Fragment {
             GeoPoint lastPosition = new GeoPoint(coordinates.getLatitudine(), coordinates.getLongitudine());
 
             mapSetup(lastPosition);
-           busStopRepository.getAll().observe((LifecycleOwner) getActivity(), new Observer<List<BusStop>>() {
+            for(BusStop busStop : getBusStops()){
+                addMarker(busStop);
+            }
+          /* busStopRepository.getAll().observe((LifecycleOwner) getActivity(), new Observer<List<BusStop>>() {
                @Override
                public void onChanged(List<BusStop> busStops) {
                    for (BusStop busStop : busStops){
@@ -93,7 +107,7 @@ public class MapsHome extends Fragment {
                    }
                }
            });
-
+*/
 
         }
 }
@@ -119,9 +133,29 @@ public class MapsHome extends Fragment {
         marker.setPosition(new GeoPoint(busStop.getPosition().getLatitudine(), busStop.getPosition().getLongitudine()));
         marker.setIcon(getResources().getDrawable(R.drawable.ic_baseline_bus_alert_24));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marker.setInfoWindow(new BusStopInfoWindows(getActivity(), R.layout.marker_bus_stop, map, busRepository, busStop, userRepository));
+        marker.setInfoWindow(new BusStopInfoWindows(getActivity(), R.layout.marker_bus_stop, map, busStop));
         map.getOverlays().add(marker);
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private List<BusStop> getBusStops(){
+        List<BusStop> list = new ArrayList<>();
+        Task<QuerySnapshot> tResult =  db.collection("BusStop").get();
+        while(!tResult.isComplete()){}
+
+        for (QueryDocumentSnapshot q : tResult.getResult()) {
+            String coord = String.valueOf(q.get("position"));
+            list.add(new BusStop(
+                    Integer.parseInt(String.valueOf(q.get("bus_stop_id"))),
+                    Integer.parseInt(String.valueOf(q.get("user_created_id"))),
+                    String.valueOf(q.get("name")),
+                    Coordinates.getCoordinatesFromString(coord),
+                    Base64.getDecoder().decode(String.valueOf(q.get("image"))) )
+            );
+        }
+
+        return list;
     }
 
 }
