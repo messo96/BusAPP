@@ -62,6 +62,7 @@ public class AddTimeFragment extends Fragment {
             map.put("day", day);
             map.put("id_creator", id_creator);
             map.put("time", hour);
+            map.put("feedback", 0);
 
 
             db.collection("Time").add(map)

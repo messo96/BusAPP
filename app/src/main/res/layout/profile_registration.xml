@@ -48,9 +48,9 @@
    <TextView
        android:id="@+id/redirect_login"
        android:layout_width="match_parent"
-       android:layout_height="200dp"
+       android:layout_height="wrap_content"
       android:text="Login"
-      android:gravity="right|bottom" />
+      android:gravity="right" />
 
 
 

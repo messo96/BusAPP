@@ -52,7 +52,7 @@
         android:textColor="@color/white"
         android:text="Created by: "
         android:layout_marginBottom="10dp"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="30dp"
         />
 
 

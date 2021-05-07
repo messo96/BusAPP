@@ -42,6 +42,7 @@ public class DetailBusFragment extends Fragment {
         CustomAdapter customAdapter = new CustomAdapter(getActivity(), getContext(), idBusStop, nameBus);
 
 
+
         ListView listView = (ListView) getActivity().findViewById(R.id.list_hour);
         listView.setAdapter(customAdapter);
 
