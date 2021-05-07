@@ -218,6 +218,10 @@ public class MapsHome extends Fragment {
                 super.onLocationResult(locationResult);
                 mapController.animateTo(new GeoPoint(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
                 Toast.makeText(getContext(), "Done.", Toast.LENGTH_SHORT).show();
+                sharedPreferences
+                        .edit()
+                        .putString("last_coordinates", locationResult.getLastLocation().getLatitude()+";"+locationResult.getLastLocation().getLongitude())
+                        .apply();
 
             }
         };
