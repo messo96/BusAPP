@@ -9,7 +9,7 @@ import com.example.busapp.AddFragment;
 import com.example.busapp.AddTimeFragment;
 import com.example.busapp.DetailBusFragment;
 import com.example.busapp.ListBusFragment;
-
+import com.example.busapp.MapsHome;
 
 
 public class Utilities {
@@ -21,7 +21,7 @@ public class Utilities {
         transaction.replace(idContainer, fragment, tag);
 
         //add the transaction to the back stack so the user can navigate back
-        if( !(fragment instanceof AddFragment) && !(fragment instanceof ListBusFragment)
+        if( !(fragment instanceof AddFragment) && !(fragment instanceof MapsHome) && !(fragment instanceof ListBusFragment)
                 && !(fragment instanceof DetailBusFragment)  && !(fragment instanceof AddBusFragment) && !(fragment instanceof AddTimeFragment))
             transaction.addToBackStack(tag);
 

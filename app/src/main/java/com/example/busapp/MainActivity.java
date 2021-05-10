@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.busapp.Utils.Utilities;
+import com.google.android.material.bottomnavigation.BottomNavigationMenu;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.FirebaseApp;
 
@@ -28,8 +29,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(this);
-
         AppCompatActivity activity = this;
+        getSupportActionBar().setTitle(R.string.app_name);
+
+
       // PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
              //  .edit()
              // .putBoolean("logged", false)
@@ -55,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
                         nameFragment = "MapsHome";
                         break;
                     case R.id.navigation_profile:
-                        selectedFragment = new ProfileFragment(true);
+                        selectedFragment = new ProfileFragment(true, getSupportActionBar());
                         nameFragment = "Profile";
                         break;
                 }
@@ -70,6 +73,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        bottomNavigationView.setOnNavigationItemReselectedListener(new BottomNavigationView.OnNavigationItemReselectedListener() {
+            @Override
+            public void onNavigationItemReselected(@NonNull MenuItem item) {
+                //nothing
+            }
+        });
+
     }
 
+    @Override
+    public void onBackPressed() {
+
+        bottomNavigationView.getMenu().findItem(R.id.navigation_maps).setChecked(true);
+        super.onBackPressed();
+
+    }
 }

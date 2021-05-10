@@ -2,6 +2,7 @@
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LifecycleOwner;
@@ -31,6 +33,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.bottomnavigation.BottomNavigationMenu;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -50,12 +55,13 @@ import java.util.Map;
         private List<User> list = new ArrayList<>();
         boolean login;
         private FirebaseFirestore db;
+        private ActionBar actionBar;
 
 
-
-        public ProfileFragment(final boolean flagLogin) {
+        public ProfileFragment(final boolean flagLogin, final androidx.appcompat.app.ActionBar actionBar) {
             super();
             this.login = flagLogin;
+            this.actionBar = actionBar;
         }
 
         @Override
@@ -73,17 +79,22 @@ import java.util.Map;
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             String email = sharedPreferences.getString("email", "email");
-            if (!login)
+            if (!login) {
+               actionBar.setTitle("Registation");
                 return inflater.inflate(R.layout.profile_registration, container, false);
-            else
-                return inflater.inflate(R.layout.profile_login, container, false);
 
+            }
+            else{
+                actionBar.setTitle("Login");
+                return inflater.inflate(R.layout.profile_login, container, false);
+            }
 
         }
 
         @Override
         public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
             super.onViewCreated(view, savedInstanceState);
+
             if (!login) { // Registration
                 EditText editText_username = view.findViewById(R.id.username_registration);
                 EditText email = view.findViewById(R.id.email_registration);
@@ -94,7 +105,8 @@ import java.util.Map;
                 view.findViewById(R.id.redirect_login).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true), "LoginFragment", R.id.fragment_container_view);
+                        getActivity().getSupportFragmentManager().popBackStack();
+                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
                     }
                 });
 
@@ -242,7 +254,8 @@ import java.util.Map;
                 view.findViewById(R.id.redirect_register).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(false), "RegistrationFragment", R.id.fragment_container_view);
+                        getActivity().getSupportFragmentManager().popBackStack();
+                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(false, actionBar), "RegistrationFragment", R.id.fragment_container_view);
                     }
                 });
             }

@@ -34,6 +34,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -84,6 +85,11 @@ public class AddFragment extends Fragment {
     private BusStopRepository busStopRepository;
     private byte[] image;
     private FirebaseFirestore db;
+    private ActionBar actionBar;
+
+    public AddFragment(final ActionBar actionBar){
+        this.actionBar = actionBar;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -106,7 +112,7 @@ public class AddFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        actionBar.setTitle("Add new Bus Stop");
 
         if(sharedPreferences.getBoolean("logged", false)) {
             Activity activity = getActivity();
@@ -187,7 +193,7 @@ public class AddFragment extends Fragment {
         else{
             new AlertDialog.Builder(getContext()).setMessage("You must be logged for create new Bus Stop.")
                     .setPositiveButton("Ok ,log me in", (dialog, id) -> {
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true), "ProfileFragment", R.id.fragment_container_view);
+                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "ProfileFragment", R.id.fragment_container_view);
                     })
                     .setNegativeButton("No, i won't", (dialog, id) -> dialog.cancel())
                     .create().show();

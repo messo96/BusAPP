@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.busapp.Utils.Utilities;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class AddActivity extends AppCompatActivity {
 
@@ -16,7 +17,7 @@ public class AddActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add);
 
         if(savedInstanceState == null){
-            Utilities.insertFragment(this, new AddFragment(), "Add", R.id.fragment_container_view);
+            Utilities.insertFragment(this, new AddFragment(getSupportActionBar()), "Add", R.id.fragment_container_view);
         }
     }
 
