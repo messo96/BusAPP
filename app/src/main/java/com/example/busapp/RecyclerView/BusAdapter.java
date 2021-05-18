@@ -64,6 +64,7 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
         holder.textViewNumberBus.setText(busStop.first);
         writeCreator(holder, busStop.second);
         holder.idBusStop = activity.getIntent().getIntExtra("busStop_id", -1);
+        holder.nameBusStop = activity.getIntent().getStringExtra("name_busStop");
     }
 
     private void writeCreator(BusViewHolder holder, Integer id_creator) {
@@ -71,7 +72,7 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 for(QueryDocumentSnapshot q : queryDocumentSnapshots)
-                holder.textViewCreator.setText(holder.textViewCreator.getText() + String.valueOf(q.get("username")) );
+                holder.textViewCreator.setText("Found by: " + q.get("username") );
             }
         });
 

@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,8 +15,10 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -37,6 +41,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
@@ -61,8 +67,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -70,6 +81,7 @@ import java.util.Map;
 
 import static android.app.Activity.RESULT_OK;
 import static android.content.Context.LOCATION_SERVICE;
+import static android.os.Environment.getExternalStoragePublicDirectory;
 
 public class AddFragment extends Fragment {
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -86,8 +98,9 @@ public class AddFragment extends Fragment {
     private byte[] image;
     private FirebaseFirestore db;
     private ActionBar actionBar;
+    Uri imageUri;
 
-    public AddFragment(final ActionBar actionBar){
+    public AddFragment(final ActionBar actionBar) {
         this.actionBar = actionBar;
     }
 
@@ -114,7 +127,7 @@ public class AddFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         actionBar.setTitle("Add new Bus Stop");
 
-        if(sharedPreferences.getBoolean("logged", false)) {
+        if (sharedPreferences.getBoolean("logged", false)) {
             Activity activity = getActivity();
 
             if (activity != null) {
@@ -164,7 +177,7 @@ public class AddFragment extends Fragment {
                                         getActivity().onBackPressed();
 
                                     }).addOnFailureListener(l -> {
-                                        Toast.makeText(getContext(), "Can't create Bus Stop", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getContext(), "Can't create Bus Stop" + l.getMessage(), Toast.LENGTH_SHORT).show();
                                     });
                                 }
                             });
@@ -189,8 +202,7 @@ public class AddFragment extends Fragment {
                 });
             }
 
-        }
-        else{
+        } else {
             new AlertDialog.Builder(getContext()).setMessage("You must be logged for create new Bus Stop.")
                     .setPositiveButton("Ok ,log me in", (dialog, id) -> {
                         Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "ProfileFragment", R.id.fragment_container_view);
@@ -213,29 +225,27 @@ public class AddFragment extends Fragment {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
-                Toast.makeText(activity.getApplicationContext(), "Position getted", Toast.LENGTH_SHORT).show();
-
                 try {
                     Address location = geocoder.getFromLocation(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude(), 1).get(0);
 
                     busStopRepository.getAll().observe((LifecycleOwner) activity, new Observer<List<BusStop>>() {
                         boolean stillExist = false;
+
                         @Override
                         public void onChanged(List<BusStop> busStops) {
-                            for(BusStop bus : busStops){
-                                if(location.getLongitude() == bus.getPosition().getLongitudine() && location.getLatitude() == bus.getPosition().getLatitudine()){
+                            for (BusStop bus : busStops) {
+                                if (location.getLongitude() == bus.getPosition().getLongitudine() && location.getLatitude() == bus.getPosition().getLatitudine()) {
                                     stillExist = true;
                                     break;
                                 }
                             }
-                            if(stillExist){
+                            if (stillExist) {
                                 new AlertDialog.Builder(getContext())
                                         .setMessage("The Bus Stop in this position is already been created, please go to another. ")
                                         .setPositiveButton("Ok", ((dialog, which) -> dialog.cancel()))
                                         .create()
                                         .show();
-                            }
-                            else{
+                            } else {
                                 view_position.setText(location.getAddressLine(0));
                                 coordinates = new Coordinates(location.getLatitude(), location.getLongitude());
                                 sharedPreferences.edit()
@@ -259,15 +269,14 @@ public class AddFragment extends Fragment {
 
     private void startLocationUpdates(Activity activity) {
         String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
-        if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED){
-            LocationManager lm = (LocationManager)getContext().getSystemService(Context.LOCATION_SERVICE);
-            if(!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED) {
+            LocationManager lm = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 showDialog(activity);
             }
 
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-        }
-        else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, PERMISSION_REQUESTED))
             showDialog(activity);
         else
             activityResultLauncher.launch(PERMISSION_REQUESTED);
@@ -287,25 +296,38 @@ public class AddFragment extends Fragment {
 
 
     private void uploadImage() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        try {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        } catch (ActivityNotFoundException e) {
-            // display error state to the user
-        }
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "Place_Picture_BUSAPP");
+        values.put(MediaStore.Images.Media.DESCRIPTION, "Photo taken on " + System.currentTimeMillis());
+        imageUri = getActivity().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            Bitmap imageBitmap = null;
             ImageView imageView = getView().findViewById(R.id.imageview_bus);
-            imageView.setImageBitmap(imageBitmap);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            image = stream.toByteArray();
+            try {
+                imageBitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageUri);
+                imageView.setImageBitmap(imageBitmap);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
+                image = stream.toByteArray();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
         }
+
     }
+
+
 
 }

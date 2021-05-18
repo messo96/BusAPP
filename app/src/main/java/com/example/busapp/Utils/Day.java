@@ -1,13 +1,14 @@
 package com.example.busapp.Utils;
 
 public enum Day{
-    Lunedì("Lunedì", 0),
-    Martedì("Martedì", 1),
-    Mercoledì("Mercoledì", 2),
-    Giovedì("Giovedì", 3),
-    Venerdì("Venerdì", 4),
-    Sabato("Sabato", 5),
-    Domenica("Domenica", 6);
+    All("All", 0),
+    Lunedì("Lunedì", 1),
+    Martedì("Martedì", 2),
+    Mercoledì("Mercoledì", 3),
+    Giovedì("Giovedì", 4),
+    Venerdì("Venerdì", 5),
+    Sabato("Sabato", 6),
+    Domenica("Domenica", 7);
 
     private int index;
     private String name;

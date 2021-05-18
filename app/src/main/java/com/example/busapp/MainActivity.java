@@ -1,19 +1,13 @@
 package com.example.busapp;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.view.MenuItem;
-import android.widget.Toast;
+
 
 import com.example.busapp.Utils.Utilities;
-import com.google.android.material.bottomnavigation.BottomNavigationMenu;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.FirebaseApp;
 
@@ -33,19 +27,18 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(R.string.app_name);
 
 
+         //FOR DEBUG, EVERY TIME YOU OPEN THE APP YOU HAVE TO LOGIN
       // PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
              //  .edit()
              // .putBoolean("logged", false)
              //.apply();
 
+
         //Map as default
         Utilities.insertFragment(activity, new MapsHome(), "MapsHome", R.id.fragment_container_view);
+
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.nav_view);
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
-
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
 
                 switch (item.getItemId()) {
                     case R.id.navigation_add:
@@ -54,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
                         trans = false;
                         break;
                     case R.id.navigation_maps:
+                        getSupportActionBar().setTitle(R.string.app_name);
                         selectedFragment = new MapsHome();
                         nameFragment = "MapsHome";
                         break;
@@ -65,19 +59,20 @@ public class MainActivity extends AppCompatActivity {
 
                 if(trans){
                         Utilities.insertFragment(activity, selectedFragment, nameFragment, R.id.fragment_container_view);
+                        return true;
+                }
+                else{
+                    trans = true;
+                    return false;
                 }
 
 
-                return true;
 
-            }
+
         });
 
-        bottomNavigationView.setOnNavigationItemReselectedListener(new BottomNavigationView.OnNavigationItemReselectedListener() {
-            @Override
-            public void onNavigationItemReselected(@NonNull MenuItem item) {
+        bottomNavigationView.setOnNavigationItemReselectedListener(r ->  {
                 //nothing
-            }
         });
 
     }
@@ -86,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
 
         bottomNavigationView.getMenu().findItem(R.id.navigation_maps).setChecked(true);
+        getSupportActionBar().setTitle(R.string.app_name);
         super.onBackPressed();
 
     }

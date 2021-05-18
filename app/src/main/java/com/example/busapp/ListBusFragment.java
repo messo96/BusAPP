@@ -29,7 +29,9 @@ import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -40,7 +42,6 @@ import java.util.List;
 
 public class ListBusFragment extends Fragment {
     private BusAdapter busAdapter;
-    private BusRepository busRepository;
     private RecyclerView recyclerView;
     private FirebaseFirestore db;
 
@@ -48,7 +49,6 @@ public class ListBusFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        busRepository = new BusRepository(getActivity().getApplication());
         db = FirebaseFirestore.getInstance();
     }
 
@@ -66,6 +66,9 @@ public class ListBusFragment extends Fragment {
 
         setRecyclerView(getActivity());
 
+        /**
+         *  Get data from Firestore
+         */
         db.collection("Bus").whereEqualTo("busStop_id", id_busStop).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
@@ -84,19 +87,19 @@ public class ListBusFragment extends Fragment {
             }
         });
 
-        /*
-        busRepository.getBus(id_busStop).observe((LifecycleOwner) getActivity(), new Observer<List<BusSimple>>() {
+        db.collection("Bus").whereEqualTo("busStop_id", id_busStop).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
-            public void onChanged(List<BusSimple> bus) {
-                if(!bus.isEmpty()) {
-                    busAdapter.setData(bus);
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                List<Pair<String, Integer>> list = new ArrayList<>();
+                for(QueryDocumentSnapshot q : value){
+                    list.add(new Pair<>(String.valueOf(q.get("name_bus")), Integer.parseInt(String.valueOf(q.get("id_creator"))) ));
                 }
-
+                busAdapter.setData(list);
             }
         });
 
-         */
+
         view.findViewById(R.id.fab_add_bus).setOnClickListener(w ->{
             Intent intent = new Intent(getContext(), AddBusActivity.class);
             intent.putExtra("busStop_id", id_busStop);

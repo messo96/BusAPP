@@ -48,6 +48,7 @@ public class AddTimeFragment extends Fragment {
         Activity activity = getActivity();
         TextView day_text = view.findViewById(R.id.day_selected);
         TimePicker timePicker = view.findViewById(R.id.select_hour_time);
+        assert activity != null;
         int id_busStop = activity.getIntent().getIntExtra("busStop_id", -1);
         int id_creator = activity.getIntent().getIntExtra("id", -1);
         String name_bus = activity.getIntent().getStringExtra("name_bus");
@@ -65,50 +66,23 @@ public class AddTimeFragment extends Fragment {
             map.put("feedback", 0);
 
 
-            db.collection("Time").add(map)
-                    .addOnSuccessListener(s -> {
-                        Toast.makeText(getContext(), "Time added successfully", Toast.LENGTH_LONG).show();
-                        getActivity().onBackPressed();
+            db.collection("Time")
+                    .whereEqualTo("time", hour)
+                    .get()
+                    .addOnSuccessListener(task ->{
+                        if(task.isEmpty()){
+                            db.collection("Time").add(map)
+                                    .addOnSuccessListener(s -> {
+                                        Toast.makeText(getContext(), "Time added successfully", Toast.LENGTH_LONG).show();
+                                        getActivity().onBackPressed();
 
-                    })
-                    .addOnFailureListener(f -> Toast.makeText(getContext(), "Error, can't add Time", Toast.LENGTH_LONG).show());
-
-            /*
-                busRepository.getHours(id_busStop, name_bus, day_spinner.getSelectedItem().toString()).observe((LifecycleOwner) getActivity(), new Observer<List<String>>() {
-                    @Override
-                    public void onChanged(List<String> strings) {
-                        boolean stillExist = false;
-                        for(String h : strings){
-                            if(h.matches(hour)){
-                                stillExist = true;
-                                break;
-                            }
+                                    })
+                                    .addOnFailureListener(f -> Toast.makeText(getContext(), "Error, can't add Time", Toast.LENGTH_LONG).show());
                         }
-                        if(stillExist)
-                            Toast.makeText(context, "This hour for this bus still exist", Toast.LENGTH_LONG).show();
                         else{
-                            busRepository.addBus(new Bus(name_bus, new Week(day_spinner.getSelectedItem().toString(), hour), id_busStop));
-
-                            Toast.makeText(context, "Bus" + name_bus + " added :)", Toast.LENGTH_LONG).show();
-                            getActivity().getSupportFragmentManager().popBackStack();
-
+                            Toast.makeText(getContext(), "Time is still added.", Toast.LENGTH_LONG).show();
                         }
-                    }
-
-                });
-
-            }
-            else{
-                new AlertDialog.Builder(getActivity())
-                        .setMessage("You must write the name or number of the bus")
-                        .setCancelable(false)
-                        .setPositiveButton("Ok, sorry", (dialog, id) -> dialog.cancel())
-                        .setNegativeButton("No I won't", (dialog, id) -> getActivity().getSupportFragmentManager().popBackStack())
-                        .create()
-                        .show();
-            }
-
-            */
+                    });
 
         });
 

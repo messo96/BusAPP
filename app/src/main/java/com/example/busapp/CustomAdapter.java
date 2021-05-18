@@ -17,84 +17,113 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import com.example.busapp.Utils.Day;
-import com.example.busapp.database.Bus.BusRepository;
-import com.google.android.gms.tasks.OnSuccessListener;
+
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomAdapter extends BaseAdapter {
-        private Context context;
-        private Day day;
-        private String orario[] = new String[Day.values().length];
-        private LayoutInflater inflater;
-        private BusRepository busRepository;
-        private Activity activity;
-        FirebaseFirestore db;
+    private final int MAX_HEIGHT = 150;
+    private final Context context;
+    private Day day;
+    private final String[] orario;
+    private final LayoutInflater inflater;
+    private final Activity activity;
+    private final FirebaseFirestore db;
+    private final Integer idBusStop;
+    private final String nameBus;
+    private int length = Day.values().length - 1;
 
-        private Integer idBusStop;
-        private String nameBus;
 
-        public CustomAdapter(Activity activity, Context applicationContext,int idBusStop,String nameBus) {
-            this.context = applicationContext;
-            this.activity = activity;
-            this.inflater = (LayoutInflater.from(applicationContext));
-            this.busRepository = new BusRepository(activity.getApplication());
-            this.nameBus = nameBus;
-            this.idBusStop = idBusStop;
-            this.db = FirebaseFirestore.getInstance();
-        }
+    public CustomAdapter(Activity activity, Context applicationContext, int idBusStop, String nameBus) {
+        this.orario = new String[length];
+        this.context = applicationContext;
+        this.activity = activity;
+        this.inflater = (LayoutInflater.from(applicationContext));
+        this.nameBus = nameBus;
+        this.idBusStop = idBusStop;
+        this.db = FirebaseFirestore.getInstance();
+        this.day = Day.All;
+    }
 
-        @Override
-        public int getCount() {
-            return orario.length;
-        }
 
-        @Override
-        public Object getItem(int i) {
-            return orario[i];
-        }
+    @Override
+    public int getCount() {
+        return this.length;
+    }
 
-        @Override
-        public long getItemId(int i) {
-            return 0;
-        }
+    @Override
+    public Object getItem(int i) {
+        return orario[i];
+    }
 
+    @Override
+    public long getItemId(int i) {
+        return 0;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public View getView(int position, View view, ViewGroup parent) {
         view = inflater.inflate(R.layout.activity_listview, null);
 
-        TextView text_day =  view.findViewById(R.id.text_day);
-        //TextView text_orari =  view.findViewById(R.id.text_orari);
-        ListView listViewTime = (ListView) view.findViewById(R.id.listView_time);
+        Day tmp_day;
+        view.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        //Toast.makeText(activity.getApplicationContext(), String.valueOf(idBusStop), Toast.LENGTH_SHORT).show();
+        if(this.day.getIndex() == Day.All.getIndex() ){
+            tmp_day = Day.getDay(position+1);
+        }
+        else{
+            tmp_day = this.day;
+            view.getLayoutParams().height = 8000;
+
+        }
+
+
+        TextView text_day =  view.findViewById(R.id.text_day);
+        ListView listViewTime = (ListView) view.findViewById(R.id.listView_time);
+        text_day.setText(tmp_day.getName());
+
+
+        /**
+         *  Get data from Firestore
+         */
         db.collection("Time")
                 .whereEqualTo("busStop_id", idBusStop)
                 .whereEqualTo("name_bus", nameBus)
-                .whereEqualTo("day", Day.getDay(position).getName())
-                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                List<Pair<String, Integer>> list = new ArrayList<>();
-                for(QueryDocumentSnapshot q : queryDocumentSnapshots)
-                     list.add(new Pair<>(String.valueOf(q.get("time")), Integer.parseInt(String.valueOf(q.get("feedback"))) ));
+                .whereEqualTo("day", tmp_day.getName())
+                .get().addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Pair<String, Integer>> list = new ArrayList<>();
+                    for(QueryDocumentSnapshot q : queryDocumentSnapshots)
+                        list.add(new Pair<>(String.valueOf(q.get("time")), Integer.parseInt(String.valueOf(q.get("feedback"))) ));
 
-                //sort time
-                list.sort(((o1, o2) -> o1.first.compareTo(o2.first)));
+                    TimeBusAdapter timeBusAdapter = new TimeBusAdapter(context, idBusStop, nameBus, tmp_day, list);
+                    listViewTime.setAdapter(timeBusAdapter);
+                    listViewTime.getLayoutParams().height = list.size() * MAX_HEIGHT;
 
-                text_day.setText(Day.getDay(position).getName());
-                TimeBusAdapter timeBusAdapter = new TimeBusAdapter(context, idBusStop, nameBus, Day.getDay(position), list);
-                listViewTime.setAdapter(timeBusAdapter);
-                listViewTime.getLayoutParams().height = list.size() * 140;
-
-            }
         }).addOnFailureListener(f -> Toast.makeText(context, "Fail", Toast.LENGTH_LONG).show());
+
+
+        /**
+         * Get real time changes in Firestore
+         */
+        db.collection("Time")
+                .whereEqualTo("busStop_id", idBusStop)
+                .whereEqualTo("name_bus", nameBus)
+                .whereEqualTo("day", tmp_day.getName())
+                .addSnapshotListener((value, error) -> {
+                        List<Pair<String, Integer>> list = new ArrayList<>();
+                        for(QueryDocumentSnapshot q : value)
+                            list.add(new Pair<>(String.valueOf(q.get("time")), Integer.parseInt(String.valueOf(q.get("feedback"))) ));
+                        TimeBusAdapter timeBusAdapter = new TimeBusAdapter(context, idBusStop, nameBus, tmp_day, list);
+                        listViewTime.setAdapter(timeBusAdapter);
+                        listViewTime.getLayoutParams().height = list.size() * MAX_HEIGHT;
+                });
+
 
         view.findViewById(R.id.btn_add_hour).setOnClickListener(l ->{
             int id_creator = PreferenceManager.getDefaultSharedPreferences(context).getInt("id", -1);
@@ -102,12 +131,25 @@ public class CustomAdapter extends BaseAdapter {
             intent.putExtra("busStop_id", idBusStop);
             intent.putExtra("id", id_creator);
             intent.putExtra("name_bus", nameBus);
-            intent.putExtra("day", Day.getDay(position).getName());
+            intent.putExtra("day", tmp_day.getName());
 
             activity.startActivity(intent);
         });
 
 
         return view;
+    }
+
+
+    void setDay(final Day day){
+        this.day = day;
+
+        if(this.day.getName().matches(Day.All.getName())){
+            this.length = Day.values().length - 1;
+        }
+        else{
+            this.length = 1;
+        }
+
     }
 }

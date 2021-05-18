@@ -4,41 +4,32 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
-import android.os.Build;
+
 import android.preference.PreferenceManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
+
 
 import com.example.busapp.BusStopActivity;
 import com.example.busapp.R;
-import com.example.busapp.database.Bus.BusRepository;
-import com.example.busapp.database.Bus.BusSimple;
+
 import com.example.busapp.database.BusStop.BusStop;
-import com.example.busapp.database.UserRepository;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
-import java.util.List;
-import java.util.stream.Collectors;
+
 
 public class BusStopInfoWindows extends InfoWindow {
     SharedPreferences sharedPreferences;
     BusStop busStop;
     Activity activity;
     MapView map;
-    boolean isOpen;
     FirebaseFirestore db;
 
     public BusStopInfoWindows(Activity activity, int idRes, MapView map, BusStop busStop){
@@ -62,37 +53,41 @@ public class BusStopInfoWindows extends InfoWindow {
         TextView textView_creator = getView().findViewById(R.id.text_created_marker);
         textView.setText(busStop.getName());
 
-        db.collection("Bus").whereEqualTo("busStop_id", busStop.getBus_stop_id()).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+
+        db.collection("Bus").whereEqualTo("busStop_id", busStop.getBus_stop_id()).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
                 textView_list_bus.setText("");
                 for(QueryDocumentSnapshot q : queryDocumentSnapshots) {
                     String s = String.valueOf(textView_list_bus.getText());
                     textView_list_bus.setText(s + q.get("name_bus") + " | ");
                 }
 
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                textView_list_bus.setText("Something gone wrong, retry");
-            }
+        }).addOnFailureListener(f -> textView_list_bus.setText("Something gone wrong, retry"));
+
+
+        /*
+         * Update list bus
+         */
+
+        db.collection("Bus")
+                .whereEqualTo("busStop_id", busStop.getBus_stop_id())
+                .addSnapshotListener((value,error) -> {
+                    assert value != null;
+                    for(QueryDocumentSnapshot q : value) {
+                    String s = String.valueOf(textView_list_bus.getText());
+                    textView_list_bus.setText(s + q.get("name_bus") + " | ");
+                }
         });
 
 
-        db.collection("User").whereEqualTo("id", busStop.getUser_created_id()).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+        db.collection("User")
+                .whereEqualTo("id", busStop.getUser_created_id())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
                 for (QueryDocumentSnapshot q : queryDocumentSnapshots) {
                     textView_creator.setText(textView_creator.getText() + String.valueOf(q.get("username")));
                 }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                textView_creator.setText("");
-            }
-        });
+        }).addOnFailureListener(f -> textView_creator.setText("") );
 
 
 
@@ -101,6 +96,7 @@ public class BusStopInfoWindows extends InfoWindow {
             Intent intent = new Intent(activity.getApplicationContext(), BusStopActivity.class);
             intent.putExtra("busStop_id", busStop.getBus_stop_id());
             intent.putExtra("id", id_creator);
+            intent.putExtra("name_busStop", busStop.getName());
 
             activity.startActivity(intent);
         });
@@ -110,12 +106,14 @@ public class BusStopInfoWindows extends InfoWindow {
     @Override
     public void onOpen(Object item) {
         InfoWindow.closeAllInfoWindowsOn(map);
+        Toast.makeText(activity.getApplicationContext(), "OPEN", Toast.LENGTH_SHORT).show();
     }
 
 
     @Override
     public void onClose() {
         Toast.makeText(activity.getApplicationContext(), "CLOSE", Toast.LENGTH_SHORT).show();
-
     }
+
+
 }

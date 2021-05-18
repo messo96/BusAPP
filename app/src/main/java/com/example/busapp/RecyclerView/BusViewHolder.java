@@ -16,6 +16,7 @@ public class BusViewHolder extends RecyclerView.ViewHolder {
     TextView textViewNumberBus;
     TextView textViewCreator;
     Integer idBusStop;
+    String nameBusStop;
 
     public BusViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -27,6 +28,7 @@ public class BusViewHolder extends RecyclerView.ViewHolder {
                 Intent intent = new Intent(v.getContext(), DetailBusActivity.class);
                 intent.putExtra("bus_name", textViewNumberBus.getText());
                 intent.putExtra("id_bus_stop", idBusStop);
+                intent.putExtra("name_busStop", nameBusStop);
                 v.getContext().startActivity(intent);
             }
         });

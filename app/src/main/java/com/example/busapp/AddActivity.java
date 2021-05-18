@@ -10,15 +10,22 @@ import com.example.busapp.Utils.Utilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class AddActivity extends AppCompatActivity {
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
-
         if(savedInstanceState == null){
             Utilities.insertFragment(this, new AddFragment(getSupportActionBar()), "Add", R.id.fragment_container_view);
         }
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
     }
 
 }

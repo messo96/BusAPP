@@ -8,9 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,32 +18,24 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
-import androidx.room.util.DBUtil;
+
 
 import com.example.busapp.Utils.BusStopInfoWindows;
 import com.example.busapp.Utils.Coordinates;
-import com.example.busapp.database.Bus.Bus;
-import com.example.busapp.database.Bus.BusRepository;
-import com.example.busapp.database.Bus.BusSimple;
+
 import com.example.busapp.database.BusStop.BusStop;
-import com.example.busapp.database.BusStop.BusStopRepository;
-import com.example.busapp.database.DbConnector;
-import com.example.busapp.database.User;
-import com.example.busapp.database.UserRepository;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -64,14 +53,10 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.infowindow.InfoWindow;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 
 public class MapsHome extends Fragment {
@@ -83,7 +68,6 @@ public class MapsHome extends Fragment {
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
     private ActivityResultLauncher<String> activityResultLauncher;
-    private Geocoder geocoder;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -91,8 +75,7 @@ public class MapsHome extends Fragment {
         setHasOptionsMenu(true);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         db = FirebaseFirestore.getInstance();
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
-        geocoder = new Geocoder(getContext(), Locale.getDefault());
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
     }
@@ -108,15 +91,13 @@ public class MapsHome extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+        if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
         }
         else {
             initializeLocation(getActivity());
             activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
-                    new ActivityResultCallback<Boolean>() {
-                        @Override
-                        public void onActivityResult(Boolean result) {
+                   result -> {
                             if (result) {
                                 Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
                                 startLocationUpdates(getActivity());
@@ -125,8 +106,7 @@ public class MapsHome extends Fragment {
                                 Log.d("GPS_LOG", "PERMISSION DENIED GPS");
                                 showDialog(getActivity());
                             }
-                        }
-                    });
+                   });
 
 
             String position = sharedPreferences.getString("last_coordinates",new Coordinates((float)48.8583, (float)2.2944 ).toString());
@@ -137,15 +117,6 @@ public class MapsHome extends Fragment {
             for(BusStop busStop : getBusStops()){
                 addMarker(busStop);
             }
-          /* busStopRepository.getAll().observe((LifecycleOwner) getActivity(), new Observer<List<BusStop>>() {
-               @Override
-               public void onChanged(List<BusStop> busStops) {
-                   for (BusStop busStop : busStops){
-                       addMarker(busStop);
-                   }
-               }
-           });
-*/
 
 
             view.findViewById(R.id.btn_current_gps).setOnClickListener(l ->{
@@ -161,14 +132,13 @@ public class MapsHome extends Fragment {
         //important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().load(getContext(), PreferenceManager.getDefaultSharedPreferences(getContext()));
 
-        map = (MapView) getView().findViewById(R.id.mapview);
+        map = requireView().findViewById(R.id.mapview);
         map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.ALWAYS);
         map.setMultiTouchControls(true);
 
         mapController = map.getController();
         mapController.setZoom(17.0);
-       //Toast.makeText(getContext(), position, Toast.LENGTH_SHORT).show();
         mapController.setCenter(startPosition);
 
     }
@@ -176,9 +146,10 @@ public class MapsHome extends Fragment {
     private void addMarker(BusStop busStop){
         Marker marker = new Marker(map);
         marker.setPosition(new GeoPoint(busStop.getPosition().getLatitudine(), busStop.getPosition().getLongitudine()));
-        marker.setIcon(getResources().getDrawable(R.drawable.ic_baseline_bus_alert_24));
+        marker.setIcon(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_baseline_bus_alert_24, requireActivity().getTheme()));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marker.setInfoWindow(new BusStopInfoWindows(getActivity(), R.layout.marker_bus_stop, map, busStop));
+        BusStopInfoWindows busStopInfoWindows = new BusStopInfoWindows(requireActivity(), R.layout.marker_bus_stop, map, busStop);
+        marker.setInfoWindow(busStopInfoWindows);
         map.getOverlays().add(marker);
 
     }
@@ -205,18 +176,21 @@ public class MapsHome extends Fragment {
 
 
 
+
+
     private void initializeLocation(Activity activity) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
         locationRequest = LocationRequest.create();
         locationRequest.setInterval(1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setNumUpdates(1);
+        locationRequest.setNumUpdates(2);
 
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 mapController.animateTo(new GeoPoint(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
+                mapController.setZoom(17.0);
                 Toast.makeText(getContext(), "Done.", Toast.LENGTH_SHORT).show();
                 sharedPreferences
                         .edit()

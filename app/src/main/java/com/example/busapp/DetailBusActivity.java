@@ -1,7 +1,9 @@
 package com.example.busapp;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,5 +20,21 @@ public class DetailBusActivity extends AppCompatActivity {
         if(savedInstanceState == null){
             Utilities.insertFragment(this, new DetailBusFragment(), "Bus_detail", R.id.fragment_bus);
         }
+
+        getSupportActionBar().setTitle(getIntent().getStringExtra("name_busStop") + " - " + getIntent().getStringExtra("bus_name"));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+        }
+
+        return true;
     }
 }

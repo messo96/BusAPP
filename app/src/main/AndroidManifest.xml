@@ -30,7 +30,12 @@
         <activity android:name=".DetailBusActivity" />
         <activity android:name=".AddTimeActivity" />
 
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+
 
     </application>
+
 
 </manifest>

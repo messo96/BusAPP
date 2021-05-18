@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,7 +14,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Insert name of line:"
+        android:text="Insert name of Bus Stop:"
         />
 
     <EditText
@@ -46,9 +51,10 @@
 
     <ImageView
         android:id="@+id/imageview_bus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:contentDescription="Bus Image" />
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:contentDescription="Bus Image"
+        android:layout_gravity="center"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_camera_bus"
@@ -72,3 +78,5 @@
 
 
 </androidx.appcompat.widget.LinearLayoutCompat>
+
+</ScrollView>

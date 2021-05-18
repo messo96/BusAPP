@@ -41,8 +41,33 @@
         android:layout_height="wrap_content"
         android:text="Register"
         android:layout_marginTop="20dp"
-
         android:layout_gravity="right" />
 
 
+    <TextView
+        android:id="@+id/listView_myactivity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="70dp"
+        android:layout_marginBottom="40dp"
+        android:fontFamily="@font/assistant_semibold"
+        android:gravity="center"
+        android:text="My Activity"
+        android:textSize="20sp"
+        android:visibility="invisible" />
+
+
+        <ListView
+            android:id="@+id/listView_gramification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:dividerHeight="1px"
+            android:divider="@color/grey"
+            android:layout_marginBottom="?actionBarSize"
+            />
+
+
+
+
 </androidx.appcompat.widget.LinearLayoutCompat>
+
