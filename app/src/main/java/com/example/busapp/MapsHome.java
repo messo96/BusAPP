@@ -151,7 +151,6 @@ public class MapsHome extends Fragment {
         BusStopInfoWindows busStopInfoWindows = new BusStopInfoWindows(requireActivity(), R.layout.marker_bus_stop, map, busStop);
         marker.setInfoWindow(busStopInfoWindows);
         map.getOverlays().add(marker);
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)

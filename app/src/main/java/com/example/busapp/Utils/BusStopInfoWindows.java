@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 
 import android.preference.PreferenceManager;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,7 @@ import com.example.busapp.database.BusStop.BusStop;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.infowindow.InfoWindow;
@@ -31,6 +33,7 @@ public class BusStopInfoWindows extends InfoWindow {
     Activity activity;
     MapView map;
     FirebaseFirestore db;
+    private int fixOpenClose = 0;
 
     public BusStopInfoWindows(Activity activity, int idRes, MapView map, BusStop busStop){
         super(idRes, map);
@@ -56,11 +59,7 @@ public class BusStopInfoWindows extends InfoWindow {
 
         db.collection("Bus").whereEqualTo("busStop_id", busStop.getBus_stop_id()).get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                textView_list_bus.setText("");
-                for(QueryDocumentSnapshot q : queryDocumentSnapshots) {
-                    String s = String.valueOf(textView_list_bus.getText());
-                    textView_list_bus.setText(s + q.get("name_bus") + " | ");
-                }
+               addListToInfoWindows(queryDocumentSnapshots, textView_list_bus);
 
         }).addOnFailureListener(f -> textView_list_bus.setText("Something gone wrong, retry"));
 
@@ -72,12 +71,9 @@ public class BusStopInfoWindows extends InfoWindow {
         db.collection("Bus")
                 .whereEqualTo("busStop_id", busStop.getBus_stop_id())
                 .addSnapshotListener((value,error) -> {
-                    assert value != null;
-                    for(QueryDocumentSnapshot q : value) {
-                    String s = String.valueOf(textView_list_bus.getText());
-                    textView_list_bus.setText(s + q.get("name_bus") + " | ");
-                }
-        });
+                    addListToInfoWindows(value, textView_list_bus);
+
+                });
 
 
         db.collection("User")
@@ -103,17 +99,33 @@ public class BusStopInfoWindows extends InfoWindow {
     }
 
 
+
+
     @Override
     public void onOpen(Object item) {
         InfoWindow.closeAllInfoWindowsOn(map);
-        Toast.makeText(activity.getApplicationContext(), "OPEN", Toast.LENGTH_SHORT).show();
+        Toast.makeText(activity.getApplicationContext(), "OPEN" , Toast.LENGTH_SHORT).show();
+        if(fixOpenClose == 2){
+            this.getView().setVisibility(View.VISIBLE);
+            fixOpenClose = 0;
+        }
     }
 
 
     @Override
     public void onClose() {
         Toast.makeText(activity.getApplicationContext(), "CLOSE", Toast.LENGTH_SHORT).show();
+        this.getView().setVisibility(View.INVISIBLE);
+        fixOpenClose++;
     }
 
 
+
+    private void addListToInfoWindows(QuerySnapshot queryDocumentSnapshots, TextView textView_list_bus) {
+        textView_list_bus.setText("");
+        for(QueryDocumentSnapshot q : queryDocumentSnapshots) {
+            String s = String.valueOf(textView_list_bus.getText());
+            textView_list_bus.setText(s + q.get("name_bus") + " | ");
+        }
+    }
 }
