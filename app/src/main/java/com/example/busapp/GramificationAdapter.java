@@ -22,11 +22,11 @@ public class GramificationAdapter extends BaseAdapter {
     private final FirebaseFirestore db;
     private final Context context;
     private final int idUser;
-    private List<Gramification> list;
+    private List<Gamification> list;
     private List<Integer> listBadge;
 
 
-    public GramificationAdapter(final Context context, final int idUser, List<Gramification> list ){
+    public GramificationAdapter(final Context context, final int idUser, List<Gamification> list ){
         this.context = context;
         this.inflater = (LayoutInflater.from(this.context));
         this.db = FirebaseFirestore.getInstance();
@@ -56,7 +56,7 @@ public class GramificationAdapter extends BaseAdapter {
     public View getView(int position, View view, ViewGroup parent) {
         view = inflater.inflate(R.layout.gramification_listview, null);
 
-        Gramification gramification = list.get(position);
+        Gamification gamification = list.get(position);
         ImageView imageView = view.findViewById(R.id.image_gramification);
         TextView textView_xp = view.findViewById(R.id.text_view_xp);
         TextView textView_title = view.findViewById(R.id.text_view_gramification_title);
@@ -66,9 +66,9 @@ public class GramificationAdapter extends BaseAdapter {
             imageView.setImageResource(listBadge.get(position));
             checkCompletedTask(position, imageView);
         }
-        textView_title.setText(gramification.getTitle());
-        textView_description.setText(gramification.getDescription());
-        textView_xp.setText(String.valueOf(gramification.getExp()) + textView_xp.getText() );
+        textView_title.setText(gamification.getTitle());
+        textView_description.setText(gamification.getDescription());
+        textView_xp.setText(String.valueOf(gamification.getExp()) + textView_xp.getText() );
 
 
 

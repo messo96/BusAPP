@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -15,9 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.busapp.Utils.Day;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentReference;
+
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -68,13 +65,14 @@ public class AddTimeFragment extends Fragment {
 
             db.collection("Time")
                     .whereEqualTo("time", hour)
+                    .whereEqualTo("day", day)
                     .get()
                     .addOnSuccessListener(task ->{
                         if(task.isEmpty()){
                             db.collection("Time").add(map)
                                     .addOnSuccessListener(s -> {
                                         Toast.makeText(getContext(), "Time added successfully", Toast.LENGTH_LONG).show();
-                                        getActivity().onBackPressed();
+                                        requireActivity().onBackPressed();
 
                                     })
                                     .addOnFailureListener(f -> Toast.makeText(getContext(), "Error, can't add Time", Toast.LENGTH_LONG).show());

@@ -3,8 +3,7 @@ package com.example.busapp;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
-import android.content.ContentResolver;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -13,16 +12,15 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +30,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -41,10 +38,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
+
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 
@@ -52,36 +47,29 @@ import com.example.busapp.Utils.Coordinates;
 import com.example.busapp.Utils.Utilities;
 import com.example.busapp.database.BusStop.BusStop;
 import com.example.busapp.database.BusStop.BusStopRepository;
-import com.example.busapp.database.DbConnector;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
+
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
+
 import java.util.Base64;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+
 import static android.app.Activity.RESULT_OK;
-import static android.content.Context.LOCATION_SERVICE;
-import static android.os.Environment.getExternalStoragePublicDirectory;
+
 
 public class AddFragment extends Fragment {
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -97,7 +85,7 @@ public class AddFragment extends Fragment {
     private BusStopRepository busStopRepository;
     private byte[] image;
     private FirebaseFirestore db;
-    private ActionBar actionBar;
+    private final ActionBar actionBar;
     Uri imageUri;
 
     public AddFragment(final ActionBar actionBar) {
@@ -108,10 +96,10 @@ public class AddFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         geocoder = new Geocoder(getContext(), Locale.getDefault());
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        busStopRepository = new BusStopRepository(getActivity().getApplication());
+        busStopRepository = new BusStopRepository(requireActivity().getApplication());
         db = FirebaseFirestore.getInstance();
     }
 
@@ -126,92 +114,71 @@ public class AddFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         actionBar.setTitle("Add new Bus Stop");
+        Activity activity = requireActivity();
+        view_position = activity.findViewById(R.id.edit_text_position);
+        EditText editText_busStopName = view.findViewById(R.id.edit_text_number_bus);
+        int id = sharedPreferences.getInt("id", -1);
+
+        if (id == -1) {
+            new AlertDialog.Builder(getContext()).setMessage("You must be logged for create new Bus Stop.")
+                    .setPositiveButton("Ok ,log me in", (dialog, identity) ->
+                        Utilities
+                                .insertFragment((AppCompatActivity) requireActivity(),
+                                        new ProfileFragment(true, actionBar), "ProfileFragment", R.id.fragment_container_view)
+            )
+                    .setNegativeButton("No, i won't", (dialog, identity) -> {
+                        dialog.cancel();
+                        requireActivity().onBackPressed();
+                    })
+                    .create().show();
+        }
 
         if (sharedPreferences.getBoolean("logged", false)) {
-            Activity activity = getActivity();
 
-            if (activity != null) {
-                view.findViewById(R.id.button_camera_bus).setOnClickListener(e -> {
-                    uploadImage();
-                });
 
-                view_position = activity.findViewById(R.id.edit_text_position);
-                EditText editText_busNumber = view.findViewById(R.id.edit_text_number_bus);
-                initializeLocation(getActivity());
-                activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
-                        new ActivityResultCallback<Boolean>() {
-                            @Override
-                            public void onActivityResult(Boolean result) {
-                                if (result) {
-                                    Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
-                                    startLocationUpdates(getActivity());
-                                    Log.d("GPS_LOG", "PERMISSION GRANTED GPS");
-                                } else {
-                                    Log.d("GPS_LOG", "PERMISSION DENIED GPS");
-                                    showDialog(activity);
-                                }
+            requireActivity();
+            view.findViewById(R.id.button_camera_bus).setOnClickListener(e -> uploadImage() );
+
+
+            initializeLocation(getActivity());
+            activityResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                   result -> {
+                            if (result) {
+                                Toast.makeText(getContext(), "Request Position", Toast.LENGTH_SHORT).show();
+                                startLocationUpdates(getActivity());
+                                Log.d("GPS_LOG", "PERMISSION GRANTED GPS");
+                            } else {
+                                Log.d("GPS_LOG", "PERMISSION DENIED GPS");
+                                showDialog(activity);
                             }
-                        });
+                    });
 
-                view.findViewById(R.id.button_gps).setOnClickListener(c -> {
-                    startLocationUpdates(activity);
-                });
-                view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
-                    int id = sharedPreferences.getInt("id", -1);
-                    if (coordinates != null && editText_busNumber.getText() != null && image != null) {
-                        if (id < 0)
-                            Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
-                        else {
-                            BusStop busStop = new BusStop(0, sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image);
+            view.findViewById(R.id.button_gps).setOnClickListener(c -> startLocationUpdates(activity) );
+
+            view.findViewById(R.id.button_add_busstop).setOnClickListener(o -> {
+
+                        if (checkInformation(coordinates, image, editText_busStopName.getText()) && id != -1) {
+                            BusStop busStop = new BusStop(0, id, String.valueOf(editText_busStopName.getText()), coordinates, image);
                             Map<String, Object> map = new HashMap<>();
                             map.put("name", busStop.getName());
                             map.put("image", Base64.getEncoder().encodeToString(busStop.getImage()));
                             map.put("position", busStop.getPosition().toString());
                             map.put("user_created_id", busStop.getUser_created_id());
-                            Task<QuerySnapshot> tResult = db.collection("BusStop").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            db.collection("BusStop").get().addOnCompleteListener(task -> {
                                     map.put("bus_stop_id", task.getResult().size());
                                     db.collection("BusStop").add(map).addOnSuccessListener(l -> {
-                                        Toast.makeText(getContext(), "Bus Stop " + String.valueOf(editText_busNumber.getText()) + " created successfully", Toast.LENGTH_SHORT).show();
-                                        getActivity().onBackPressed();
+                                        Toast.makeText(getContext(), "Bus Stop " + editText_busStopName.getText() + " created successfully", Toast.LENGTH_SHORT).show();
+                                        requireActivity().onBackPressed();
 
-                                    }).addOnFailureListener(l -> {
-                                        Toast.makeText(getContext(), "Can't create Bus Stop" + l.getMessage(), Toast.LENGTH_SHORT).show();
-                                    });
-                                }
+                                    }).addOnFailureListener(l -> Toast.makeText(getContext(), "Can't create Bus Stop" + l.getMessage(), Toast.LENGTH_SHORT).show() );
                             });
                         }
                     }
-
-
-
-                    /*
-                    int id = sharedPreferences.getInt("id", 0);
-                    if (coordinates != null && editText_busNumber.getText() != null && image != null) {
-                        if (id == 0)
-                            Toast.makeText(getContext(), "ALL FIELD MUST BE FILLED, SORRY :(", Toast.LENGTH_SHORT).show();
-                        else {
-                            busStopRepository.addBusStop(new BusStop(sharedPreferences.getInt("id", 0), String.valueOf(editText_busNumber.getText()), coordinates, image));
-                            Toast.makeText(getContext(), "Bus Stop created successfully", Toast.LENGTH_SHORT).show();
-                            getActivity().getSupportFragmentManager().popBackStack();
-                        }
-
-                    }
-                    */
-                });
-            }
-
-        } else {
-            new AlertDialog.Builder(getContext()).setMessage("You must be logged for create new Bus Stop.")
-                    .setPositiveButton("Ok ,log me in", (dialog, id) -> {
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "ProfileFragment", R.id.fragment_container_view);
-                    })
-                    .setNegativeButton("No, i won't", (dialog, id) -> dialog.cancel())
-                    .create().show();
+            );
         }
 
     }
+
 
     private void initializeLocation(Activity activity) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
@@ -270,7 +237,7 @@ public class AddFragment extends Fragment {
     private void startLocationUpdates(Activity activity) {
         String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
         if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED) {
-            LocationManager lm = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            LocationManager lm = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
             if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 showDialog(activity);
             }
@@ -299,7 +266,7 @@ public class AddFragment extends Fragment {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, "Place_Picture_BUSAPP");
         values.put(MediaStore.Images.Media.DESCRIPTION, "Photo taken on " + System.currentTimeMillis());
-        imageUri = getActivity().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        imageUri = requireActivity().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
@@ -311,10 +278,11 @@ public class AddFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bitmap imageBitmap = null;
-            ImageView imageView = getView().findViewById(R.id.imageview_bus);
+            Bitmap imageBitmap;
+            ImageView imageView = requireView().findViewById(R.id.imageview_bus);
+            imageView.setVisibility(View.VISIBLE);
             try {
-                imageBitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageUri);
+                imageBitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), imageUri);
                 imageView.setImageBitmap(imageBitmap);
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 imageBitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
@@ -329,5 +297,22 @@ public class AddFragment extends Fragment {
     }
 
 
+    private boolean checkInformation(Coordinates coordinates, byte[] image, Editable nameBusStop) {
+    boolean check = true;
+        if (coordinates == null) {
+            Snackbar.make(requireView(), "We have to get your position (GPS button)", Snackbar.LENGTH_SHORT).show();
+            check = false;
+        }
+        if (String.valueOf(nameBusStop).matches("")) {
+            Snackbar.make(requireView(), "You have to write name of the bus stop!", Snackbar.LENGTH_SHORT).show();
+            check = false;
+        }
+        if (image == null) {
+            Snackbar.make(requireView(), "Take a photo of the bus stop or in front of the bus stop", Snackbar.LENGTH_SHORT).show();
+            check = false;
+        }
+
+        return check;
+    }
 
 }

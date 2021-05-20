@@ -2,7 +2,6 @@ package com.example.busapp;
 
 import android.content.Context;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -18,23 +16,19 @@ import com.example.busapp.Utils.Day;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TimeBusAdapter extends BaseAdapter {
-    private LayoutInflater inflater;
-    private String nameBus;
-    private Integer idBusStop;
-    private Context context;
-    private Day day;
-    private List<Pair<String,Integer>> list;
-    private FirebaseFirestore db;
+    private final LayoutInflater inflater;
+    private final String nameBus;
+    private final Integer idBusStop;
+    private final Day day;
+    private final List<Pair<String,Integer>> list;
+    private final FirebaseFirestore db;
 
    @RequiresApi(api = Build.VERSION_CODES.N)
    public TimeBusAdapter(final Context context, final Integer idBusStop, final String nameBus, Day day, List<Pair<String, Integer>> list){
-       this.context = context;
-       this.inflater = (LayoutInflater.from(this.context));
+       this.inflater = (LayoutInflater.from(context));
        this.idBusStop = idBusStop;
        this.nameBus = nameBus;
        this.day = day;
@@ -80,7 +74,7 @@ public class TimeBusAdapter extends BaseAdapter {
         textView_feedback.setText(String.valueOf(pair.second));
 
 
-        btn_like.setOnClickListener(l -> {
+        btn_like.setOnClickListener(l ->
                     db.collection("Time")
                             .whereEqualTo("busStop_id", idBusStop)
                             .whereEqualTo("name_bus", nameBus)
@@ -92,10 +86,10 @@ public class TimeBusAdapter extends BaseAdapter {
                                 .update("feedback", Integer.parseInt(String.valueOf(s.getDocuments().get(0).get("feedback"))) + 1);
                         textView_feedback.setText(String.valueOf(Integer.parseInt(String.valueOf(s.getDocuments().get(0).get("feedback"))) + 1)) ;
 
-                    });
-                });
+                    })
+                );
 
-            btn_dislike.setOnClickListener(l -> {
+            btn_dislike.setOnClickListener(l ->
                         db.collection("Time")
                                 .whereEqualTo("busStop_id", idBusStop)
                                 .whereEqualTo("name_bus", nameBus)
@@ -107,8 +101,8 @@ public class TimeBusAdapter extends BaseAdapter {
                                     .update("feedback", Integer.parseInt(String.valueOf(s.getDocuments().get(0).get("feedback"))) - 1);
                             textView_feedback.setText(String.valueOf(Integer.parseInt(String.valueOf(s.getDocuments().get(0).get("feedback"))) - 1)) ;
 
-                        });
-                    });
+                        })
+                    );
 
         return view;
     }

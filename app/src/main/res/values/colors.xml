@@ -10,4 +10,5 @@
     <color name="grey">#AAA7A7</color>
     <color name="red">#FF9999</color>
     <color name="green">#99FFCC</color>
+    <color name="primary_color_app">#4CAF50</color>
 </resources>

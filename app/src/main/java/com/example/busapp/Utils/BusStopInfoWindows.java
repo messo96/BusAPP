@@ -104,7 +104,6 @@ public class BusStopInfoWindows extends InfoWindow {
     @Override
     public void onOpen(Object item) {
         InfoWindow.closeAllInfoWindowsOn(map);
-        Toast.makeText(activity.getApplicationContext(), "OPEN" , Toast.LENGTH_SHORT).show();
         if(fixOpenClose == 2){
             this.getView().setVisibility(View.VISIBLE);
             fixOpenClose = 0;
@@ -114,7 +113,6 @@ public class BusStopInfoWindows extends InfoWindow {
 
     @Override
     public void onClose() {
-        Toast.makeText(activity.getApplicationContext(), "CLOSE", Toast.LENGTH_SHORT).show();
         this.getView().setVisibility(View.INVISIBLE);
         fixOpenClose++;
     }

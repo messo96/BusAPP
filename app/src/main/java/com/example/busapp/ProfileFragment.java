@@ -1,13 +1,14 @@
 package com.example.busapp;
 
-import android.app.Activity;
-import android.app.AlertDialog;
+
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -25,25 +26,23 @@ import com.example.busapp.Utils.Coordinates;
 import com.example.busapp.Utils.Utilities;
 
 import com.example.busapp.database.User;
-import com.google.android.gms.tasks.OnCompleteListener;
 
-import com.google.android.gms.tasks.Task;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
+
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
+import java.util.Objects;
+
 
 
 public class ProfileFragment extends Fragment {
@@ -72,7 +71,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if (!login) {
-            actionBar.setTitle("Registation");
+            actionBar.setTitle("Registration");
             return inflater.inflate(R.layout.profile_registration, container, false);
 
         }
@@ -96,14 +95,13 @@ public class ProfileFragment extends Fragment {
 
 
             view.findViewById(R.id.redirect_login).setOnClickListener(l -> {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                    Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
+                requireActivity().getSupportFragmentManager().popBackStack();
+                Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
             });
-
-            Activity activity = getActivity();
 
 
             button_save.setOnClickListener(l -> {
+                hideSoftKeyboard(requireView());
                 User user = new User(String.valueOf(editText_username.getText()), String.valueOf(email.getText()), String.valueOf(password.getText()), new Coordinates(43.4, 343.3));
                 Map<String, Object> map = new HashMap<>();
                 map.put("username", user.getUsername());
@@ -115,22 +113,37 @@ public class ProfileFragment extends Fragment {
 
                     map.put("id", task.getResult().size());
 
-                    db.collection("User").add(map)
-                            .addOnSuccessListener(documentReference -> {
+                    db.collection("User")
+                            .whereEqualTo("email", user.getEmail())
+                            .get().addOnSuccessListener( doc ->{
+                        if(doc.getDocuments().isEmpty()) {
+                            db.collection("User").add(map)
+                                    .addOnSuccessListener(documentReference -> {
 
-                                Toast.makeText(getContext(), "User created successfully", Toast.LENGTH_LONG).show();
-                                sharedPreferences.edit()
-                                        .putInt("id", Integer.parseInt(String.valueOf(map.get("id"))))
-                                        .putString("username", "")
-                                        .putString("email", String.valueOf(email.getText()))
-                                        .putBoolean("logged", true)
-                                        .apply();
-                            })
-                            .addOnFailureListener(f -> {
-                                new AlertDialog.Builder(getContext()).setMessage("Cannot create User\nThis email is already registered").show();
-                            });
+                                        sharedPreferences.edit()
+                                                .putInt("id", Integer.parseInt(String.valueOf(map.get("id"))))
+                                                .putString("username", "")
+                                                .putString("email", String.valueOf(email.getText()))
+                                                .putBoolean("logged", true)
+                                                .apply();
+
+                                        Toast.makeText(getContext(), "User created successfully", Toast.LENGTH_LONG).show();
+                                        requireActivity().getSupportFragmentManager().popBackStack();
+                                        Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
+
+                                    });
+
+                        }
+                        else{
+                            Snackbar.make(requireContext(), requireView(), "This email is already registered", Snackbar.LENGTH_SHORT)
+                                    .setAction("Sign in", a ->
+                                        Utilities.insertFragment((AppCompatActivity) requireActivity(),
+                                                new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view)
+                                    ).show();
+                        }
+                    }).addOnFailureListener(f ->Toast.makeText(getContext(), "Error" + f, Toast.LENGTH_LONG).show());
+
                 });
-
             });
 
         } else { // Login
@@ -143,11 +156,11 @@ public class ProfileFragment extends Fragment {
             if (logged) {
                 email.setEnabled(false);
                 email.setText(email_text);
-                password.setVisibility(View.INVISIBLE);
-                button_save.setText("Logged");
+                password.setVisibility(View.GONE);
+                button_save.setText(R.string.logged);
                 button_save.setEnabled(false);
                 try {
-                    setUpGramification();
+                    setUpGamification();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -156,43 +169,40 @@ public class ProfileFragment extends Fragment {
             } else {
                 email.setText(sharedPreferences.getString("username", ""));
                 button_save.setOnClickListener(v -> {
+                    hideSoftKeyboard(requireView());
+                    String sEmail = String.valueOf(email.getText());
+                    String sPassword = String.valueOf(password.getText());
+                    db.collection("User")
+                            .whereEqualTo("email", sEmail)
+                            .whereEqualTo("password", sPassword)
+                            .get()
+                            .addOnCompleteListener(task -> {
+                                if(task.getResult().isEmpty()) {
+                                    Snackbar.make(requireContext(), requireView(), "Credential are not correct, please retry!", Snackbar.LENGTH_SHORT)
+                                            .setAction("Sign up", a ->
+                                                Utilities.insertFragment((AppCompatActivity) requireActivity(),
+                                                        new ProfileFragment(false, actionBar), "RegistrationFragment", R.id.fragment_container_view)
+                                            ).show();
 
-                        String sEmail = String.valueOf(email.getText());
-                        String sPassword = String.valueOf(password.getText());
-                        Task<QuerySnapshot> tResult = db.collection("User").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                            boolean check = false;
-                            @Override
-                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                for (QueryDocumentSnapshot query : task.getResult()) {
-                                    if (sEmail.matches(query.getData().get("email").toString())
-                                            && sPassword.matches(query.getData().get("password").toString())) {
-                                        sharedPreferences.edit()
-                                                .putInt("id", Integer.parseInt(query.get("id").toString()))
-                                                .putString("username", String.valueOf(email.getText()))
-                                                .putString("email", String.valueOf(email.getText()))
-                                                .putBoolean("logged", true)
-                                                .apply();
-                                        check = true;
-                                        break;
-                                    }
+                                    password.setText("");
                                 }
-                                if(check){
-
-                                    Toast.makeText(getContext(), "Logged!", Toast.LENGTH_LONG).show();
-                                    getActivity().getSupportFragmentManager().popBackStack();
+                                else {
+                                    int id = Integer.parseInt(Objects.requireNonNull(task.getResult().getDocuments().get(0).get("id")).toString());
+                                    sharedPreferences.edit()
+                                            .putInt("id", id)
+                                            .putString("username", String.valueOf(email.getText()))
+                                            .putString("email", String.valueOf(email.getText()))
+                                            .putBoolean("logged", true)
+                                            .apply();
+                                    Snackbar.make(requireContext(), requireView(), "Logged!", Snackbar.LENGTH_SHORT).show();
+                                    requireActivity().getSupportFragmentManager().popBackStack();
                                     try {
-                                        setUpGramification();
+                                        setUpGamification();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-
                                 }
-                                else{
-                                    Toast.makeText(getContext(), "Credential are not correct, please retry!", Toast.LENGTH_LONG).show();
-                                    password.setText("");
-                                }
-                            }
-                        });
+                            });
 
                 });
 
@@ -202,20 +212,21 @@ public class ProfileFragment extends Fragment {
             TextView textView_register = view.findViewById(R.id.redirect_register);
 
             if(logged){
-                textView_register.setText("Log out");
+                textView_register.setText(R.string.logout);
                 view.findViewById(R.id.redirect_register).setOnClickListener(v ->  {
                     sharedPreferences.edit()
                             .putBoolean("logged", false)
+                            .putInt("id", -1)
                             .apply();
-                        getActivity().getSupportFragmentManager().popBackStack();
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                    Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
                 });
 
             }
             else{
                 view.findViewById(R.id.redirect_register).setOnClickListener(v ->  {
-                        getActivity().getSupportFragmentManager().popBackStack();
-                        Utilities.insertFragment((AppCompatActivity) getActivity(), new ProfileFragment(false, actionBar), "RegistrationFragment", R.id.fragment_container_view);
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                    Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(false, actionBar), "RegistrationFragment", R.id.fragment_container_view);
                 });
             }
 
@@ -223,22 +234,27 @@ public class ProfileFragment extends Fragment {
 
     }
 
-    private void setUpGramification() throws IOException {
-        TextView textView = getActivity().findViewById(R.id.listView_myactivity);
+    private void setUpGamification() throws IOException {
+        TextView textView = requireActivity().findViewById(R.id.listView_myactivity);
         textView.setVisibility(View.VISIBLE);
-        ListView listView = getActivity().findViewById(R.id.listView_gramification);
-        List<Gramification> list = new ArrayList<>();
+        ListView listView = requireActivity().findViewById(R.id.listView_gramification);
+        List<Gamification> list = new ArrayList<>();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.gramification_detail)));
         String line = reader.readLine();
         while (line != null) {
             String[] data = line.split("-");//TITLE-DESCRIPTION-EXP
-            list.add(new Gramification(data[0], data[1], Integer.parseInt(data[2])) );
+            list.add(new Gamification(data[0], data[1], Integer.parseInt(data[2])) );
 
             line = reader.readLine();
         }
 
         GramificationAdapter gramificationAdapter = new GramificationAdapter(getContext(), sharedPreferences.getInt("id", -1), list);
         listView.setAdapter(gramificationAdapter);
+    }
+
+    public void hideSoftKeyboard(View view){
+        InputMethodManager imm =(InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }

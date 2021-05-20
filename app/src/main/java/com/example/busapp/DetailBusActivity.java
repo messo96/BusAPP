@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.busapp.Utils.Utilities;
 
+import java.util.Objects;
+
 public class DetailBusActivity extends AppCompatActivity {
 
     @Override
@@ -21,7 +23,7 @@ public class DetailBusActivity extends AppCompatActivity {
             Utilities.insertFragment(this, new DetailBusFragment(), "Bus_detail", R.id.fragment_bus);
         }
 
-        getSupportActionBar().setTitle(getIntent().getStringExtra("name_busStop") + " - " + getIntent().getStringExtra("bus_name"));
+        Objects.requireNonNull(getSupportActionBar()).setTitle(getIntent().getStringExtra("name_busStop") + " - " + getIntent().getStringExtra("bus_name"));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
@@ -30,9 +32,8 @@ public class DetailBusActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         super.onOptionsItemSelected(item);
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                this.finish();
+        if (item.getItemId() == android.R.id.home) {
+            this.finish();
         }
 
         return true;

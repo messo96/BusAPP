@@ -4,6 +4,7 @@ import android.Manifest;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -29,11 +31,14 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 
 import com.example.busapp.Utils.BusStopInfoWindows;
 import com.example.busapp.Utils.Coordinates;
 
+import com.example.busapp.Utils.MyProgressLoader;
 import com.example.busapp.database.BusStop.BusStop;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -41,10 +46,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -114,9 +117,8 @@ public class MapsHome extends Fragment {
             GeoPoint lastPosition = new GeoPoint(coordinates.getLatitudine(), coordinates.getLongitudine());
 
             mapSetup(lastPosition);
-            for(BusStop busStop : getBusStops()){
-                addMarker(busStop);
-            }
+
+            addBusStopToMap();
 
 
             view.findViewById(R.id.btn_current_gps).setOnClickListener(l ->{
@@ -154,23 +156,37 @@ public class MapsHome extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private List<BusStop> getBusStops(){
+    private void addBusStopToMap(){
         List<BusStop> list = new ArrayList<>();
-        Task<QuerySnapshot> tResult =  db.collection("BusStop").get();
-        while(!tResult.isComplete()){}
 
-        for (QueryDocumentSnapshot q : tResult.getResult()) {
-            String coord = String.valueOf(q.get("position"));
-            list.add(new BusStop(
-                    Integer.parseInt(String.valueOf(q.get("bus_stop_id"))),
-                    Integer.parseInt(String.valueOf(q.get("user_created_id"))),
-                    String.valueOf(q.get("name")),
-                    Coordinates.getCoordinatesFromString(coord),
-                    Base64.getDecoder().decode(String.valueOf(q.get("image"))) )
-            );
-        }
+        MyProgressLoader progress = new MyProgressLoader(getContext());
+        progress.show();
 
-        return list;
+        db.collection("BusStop")
+                .get()
+                .addOnSuccessListener(task ->{
+                    for (QueryDocumentSnapshot q : task) {
+                        String coord = String.valueOf(q.get("position"));
+                        list.add(new BusStop(
+                                Integer.parseInt(String.valueOf(q.get("bus_stop_id"))),
+                                Integer.parseInt(String.valueOf(q.get("user_created_id"))),
+                                String.valueOf(q.get("name")),
+                                Coordinates.getCoordinatesFromString(coord),
+                                Base64.getDecoder().decode(String.valueOf(q.get("image"))) )
+                        );
+                    }
+                    for(BusStop busStop : list)
+                        addMarker(busStop);
+
+                    progress.hide();
+
+                    map.invalidate();
+
+
+                }).addOnFailureListener(f -> Log.d("ERROR", "Something broke in db BusStop"));
+
+
+
     }
 
 

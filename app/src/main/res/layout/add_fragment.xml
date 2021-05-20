@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
 
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fontFamily="@font/alegreya_bold"
+
         android:text="Insert name of Bus Stop:"
-        />
+        android:textSize="20sp"
+        android:typeface="normal" />
 
     <EditText
         android:layout_width="match_parent"
@@ -28,17 +32,21 @@
 
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Position"
         android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:fontFamily="@font/alegreya_bold"
+
         />
+
     <TextView
         android:id="@+id/edit_text_position"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        />
+        android:layout_gravity="center"
+        android:fontFamily="@font/alegreya_sans" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_gps"
@@ -53,15 +61,16 @@
         android:id="@+id/imageview_bus"
         android:layout_width="300dp"
         android:layout_height="300dp"
+        android:layout_gravity="center"
         android:contentDescription="Bus Image"
-        android:layout_gravity="center"/>
+        android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_camera_bus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:icon="@drawable/ic_baseline_camera_alt_24"
-        android:layout_marginTop="45dp"
+        android:text="Take a Photo"
         android:layout_gravity="center"/>
 
 
@@ -73,6 +82,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
+        android:layout_marginTop="45dp"
         app:icon="@drawable/sharp_add_black_36"
         android:text="Add" />
 

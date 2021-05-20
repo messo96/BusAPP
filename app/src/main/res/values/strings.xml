@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">Bus Stop</string>
     <string name="title_home">Home</string>
-    <string name="title_add"></string>
     <string name="title_profile">Profile</string>
     <string name="title_app">Find and take the bus</string>
     <string name="title_add_bus_stop">Add new Bus Stop</string>
+    <string name="title_add_bus">Add Bus </string>
+    <string name="Add">Add Bus Stop</string>
+    <string name="logged">Logged</string>
+    <string name="logout">Log out</string>
 </resources>

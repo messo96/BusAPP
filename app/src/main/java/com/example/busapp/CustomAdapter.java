@@ -1,6 +1,7 @@
 package com.example.busapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -15,9 +16,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.busapp.Utils.Day;
 
+import com.example.busapp.Utils.Utilities;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -85,11 +88,11 @@ public class CustomAdapter extends BaseAdapter {
 
 
         TextView text_day =  view.findViewById(R.id.text_day);
-        ListView listViewTime = (ListView) view.findViewById(R.id.listView_time);
+        ListView listViewTime = view.findViewById(R.id.listView_time);
         text_day.setText(tmp_day.getName());
 
 
-        /**
+        /*
          *  Get data from Firestore
          */
         db.collection("Time")
@@ -108,7 +111,7 @@ public class CustomAdapter extends BaseAdapter {
         }).addOnFailureListener(f -> Toast.makeText(context, "Fail", Toast.LENGTH_LONG).show());
 
 
-        /**
+        /*
          * Get real time changes in Firestore
          */
         db.collection("Time")
@@ -117,7 +120,8 @@ public class CustomAdapter extends BaseAdapter {
                 .whereEqualTo("day", tmp_day.getName())
                 .addSnapshotListener((value, error) -> {
                         List<Pair<String, Integer>> list = new ArrayList<>();
-                        for(QueryDocumentSnapshot q : value)
+                    assert value != null : "Error to read updates of Time";
+                    for(QueryDocumentSnapshot q : value)
                             list.add(new Pair<>(String.valueOf(q.get("time")), Integer.parseInt(String.valueOf(q.get("feedback"))) ));
                         TimeBusAdapter timeBusAdapter = new TimeBusAdapter(context, idBusStop, nameBus, tmp_day, list);
                         listViewTime.setAdapter(timeBusAdapter);
@@ -127,13 +131,29 @@ public class CustomAdapter extends BaseAdapter {
 
         view.findViewById(R.id.btn_add_hour).setOnClickListener(l ->{
             int id_creator = PreferenceManager.getDefaultSharedPreferences(context).getInt("id", -1);
-            Intent intent = new Intent(activity.getApplicationContext(), AddTimeActivity.class);
-            intent.putExtra("busStop_id", idBusStop);
-            intent.putExtra("id", id_creator);
-            intent.putExtra("name_bus", nameBus);
-            intent.putExtra("day", tmp_day.getName());
+            if(id_creator == -1){
 
-            activity.startActivity(intent);
+                new AlertDialog.Builder(context).setMessage("You must be logged for add new Time for Bus " + nameBus)
+                        .setPositiveButton("Ok ,log me in", (dialog, identity) ->
+                                Utilities
+                                        .insertFragment((AppCompatActivity) activity,
+                                                new ProfileFragment(true, ((AppCompatActivity) activity).getSupportActionBar()), "ProfileFragment", R.id.fragment_container_view)
+                        )
+                        .setNegativeButton("No, i won't", (dialog, identity) -> {
+                            dialog.cancel();
+                            activity.onBackPressed();
+                        })
+                        .create().show();
+            }
+            else {
+                Intent intent = new Intent(activity.getApplicationContext(), AddTimeActivity.class);
+                intent.putExtra("busStop_id", idBusStop);
+                intent.putExtra("id", id_creator);
+                intent.putExtra("name_bus", nameBus);
+                intent.putExtra("day", tmp_day.getName());
+
+                activity.startActivity(intent);
+            }
         });
 
 

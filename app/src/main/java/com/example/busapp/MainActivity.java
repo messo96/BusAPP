@@ -5,11 +5,15 @@ import androidx.fragment.app.Fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 
 import com.example.busapp.Utils.Utilities;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.FirebaseApp;
+
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         FirebaseApp.initializeApp(this);
         AppCompatActivity activity = this;
-        getSupportActionBar().setTitle(R.string.app_name);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.app_name);
 
 
          //FOR DEBUG, EVERY TIME YOU OPEN THE APP YOU HAVE TO LOGIN
@@ -37,13 +41,16 @@ public class MainActivity extends AppCompatActivity {
         //Map as default
         Utilities.insertFragment(activity, new MapsHome(), "MapsHome", R.id.fragment_container_view);
 
-        bottomNavigationView = (BottomNavigationView) findViewById(R.id.nav_view);
+        FloatingActionButton fab_add = findViewById(R.id.fab_add_busStop);
+        fab_add.setOnClickListener(l -> addBusStop() );
+
+        bottomNavigationView = findViewById(R.id.nav_view);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
 
                 switch (item.getItemId()) {
                     case R.id.navigation_add:
-                        Intent intent = new Intent(getApplicationContext(), AddActivity.class);
-                        startActivity(intent);
+                        addBusStop();
+
                         trans = false;
                         break;
                     case R.id.navigation_maps:
@@ -55,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
                         selectedFragment = new ProfileFragment(true, getSupportActionBar());
                         nameFragment = "Profile";
                         break;
+                    default:
+                        Log.d("INFO", "Unexpected value: " + item.getItemId());
                 }
 
                 if(trans){
@@ -77,11 +86,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void addBusStop() {
+        Intent intent = new Intent(getApplicationContext(), AddActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     public void onBackPressed() {
 
         bottomNavigationView.getMenu().findItem(R.id.navigation_maps).setChecked(true);
-        getSupportActionBar().setTitle(R.string.app_name);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.app_name);
         super.onBackPressed();
 
     }
