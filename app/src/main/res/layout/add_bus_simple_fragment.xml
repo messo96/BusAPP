@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Insert name of bus(ex. 8):"
+        android:text="Insert name of bus:"
         />
 
     <EditText
@@ -33,6 +33,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="45dp"
         app:icon="@drawable/sharp_add_black_36"
+        android:background="@drawable/radius"
         android:text="Add" />
 
 

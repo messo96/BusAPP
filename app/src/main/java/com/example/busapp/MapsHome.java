@@ -3,12 +3,12 @@ package com.example.busapp;
 import android.Manifest;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,7 +20,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -31,8 +30,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
+
 
 
 import com.example.busapp.Utils.BusStopInfoWindows;
@@ -46,6 +44,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -71,6 +71,7 @@ public class MapsHome extends Fragment {
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
     private ActivityResultLauncher<String> activityResultLauncher;
+    private boolean checkPosition;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -123,7 +124,10 @@ public class MapsHome extends Fragment {
 
             view.findViewById(R.id.btn_current_gps).setOnClickListener(l ->{
                 initializeLocation(getActivity());
-                Toast.makeText(getContext(), "Finding your position...", Toast.LENGTH_SHORT).show();
+                Snackbar.make(requireContext(), requireView(), "Finding your position...", Snackbar.LENGTH_SHORT)
+                        .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_SLIDE)
+                        .show();
+                checkPosition = false;
                 startLocationUpdates(getActivity());
 
             });
@@ -140,7 +144,7 @@ public class MapsHome extends Fragment {
         map.setMultiTouchControls(true);
 
         mapController = map.getController();
-        mapController.setZoom(17.0);
+        mapController.setZoom(15.0);
         mapController.setCenter(startPosition);
 
     }
@@ -178,9 +182,9 @@ public class MapsHome extends Fragment {
                     for(BusStop busStop : list)
                         addMarker(busStop);
 
-                    progress.hide();
 
                     map.invalidate();
+                    progress.hide();
 
 
                 }).addOnFailureListener(f -> Log.d("ERROR", "Something broke in db BusStop"));
@@ -206,11 +210,14 @@ public class MapsHome extends Fragment {
                 super.onLocationResult(locationResult);
                 mapController.animateTo(new GeoPoint(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
                 mapController.setZoom(17.0);
-                Toast.makeText(getContext(), "Done.", Toast.LENGTH_SHORT).show();
                 sharedPreferences
                         .edit()
                         .putString("last_coordinates", locationResult.getLastLocation().getLatitude()+";"+locationResult.getLastLocation().getLongitude())
                         .apply();
+                if(!checkPosition){
+                    Snackbar.make(requireContext(), requireView(), "DONE", Snackbar.LENGTH_SHORT).show();
+                    checkPosition = true;
+                }
 
             }
         };
@@ -219,7 +226,7 @@ public class MapsHome extends Fragment {
     private void startLocationUpdates(Activity activity) {
         String PERMISSION_REQUESTED = Manifest.permission.ACCESS_FINE_LOCATION;
         if (ActivityCompat.checkSelfPermission(activity, PERMISSION_REQUESTED) == PackageManager.PERMISSION_GRANTED){
-            LocationManager lm = (LocationManager)getContext().getSystemService(Context.LOCATION_SERVICE);
+            LocationManager lm = (LocationManager)requireContext().getSystemService(Context.LOCATION_SERVICE);
             if(!lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || !lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 showDialog(activity);
             }
@@ -237,13 +244,13 @@ public class MapsHome extends Fragment {
 
 
             private void showDialog(Activity activity) {
-                new AlertDialog.Builder(activity)
-                        .setMessage("GPS is disabled, please enable for track the bus stop!")
-                        .setCancelable(false)
-                        .setPositiveButton("Enable now : )", (dialog, id) -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
-                        .setNegativeButton("Cancel ", (dialog, id) -> dialog.cancel())
-                        .create()
+                Snackbar
+                        .make(requireContext(), requireView(), "GPS is disabled, this need for track the bus stop", Snackbar.LENGTH_LONG)
+                        .setAction("Enable :)", a -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                        .setBackgroundTint(Color.RED)
+                        .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_SLIDE)
                         .show();
+
             }
 
 

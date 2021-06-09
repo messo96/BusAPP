@@ -149,7 +149,8 @@ public class CustomAdapter extends BaseAdapter {
                 Intent intent = new Intent(activity.getApplicationContext(), AddTimeActivity.class);
                 intent.putExtra("busStop_id", idBusStop);
                 intent.putExtra("id", id_creator);
-                intent.putExtra("name_bus", nameBus);
+                intent.putExtra("bus_name", nameBus);
+                intent.putExtra("name_busStop", activity.getIntent().getStringExtra("name_busStop"));
                 intent.putExtra("day", tmp_day.getName());
 
                 activity.startActivity(intent);

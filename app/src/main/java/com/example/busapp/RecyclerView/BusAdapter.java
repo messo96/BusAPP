@@ -39,10 +39,12 @@ import java.util.stream.Collectors;
 public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements Filterable {
 
     private  List<Pair<String, Integer>> busList = new ArrayList<>();
-    private Activity activity;
-    private FirebaseFirestore db;
+    private final Activity activity;
+    private final FirebaseFirestore db;
+
     public BusAdapter(Activity activity){
         this.activity = activity;
+        this.db = FirebaseFirestore.getInstance();
     }
 
 
@@ -67,17 +69,6 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
         holder.nameBusStop = activity.getIntent().getStringExtra("name_busStop");
     }
 
-    private void writeCreator(BusViewHolder holder, Integer id_creator) {
-        db.collection("User").whereEqualTo("id", id_creator).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                for(QueryDocumentSnapshot q : queryDocumentSnapshots)
-                holder.textViewCreator.setText("Found by: " + q.get("username") );
-            }
-        });
-
-    }
-
     @Override
     public int getItemCount() {
         return busList.size();
@@ -86,8 +77,16 @@ public class BusAdapter extends RecyclerView.Adapter<BusViewHolder> implements F
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void setData( List<Pair<String, Integer>> list) {
         this.busList = list;
-        this.db = FirebaseFirestore.getInstance();
         notifyDataSetChanged();
+    }
+
+
+    private void writeCreator(BusViewHolder holder, Integer id_creator) {
+        db.collection("User").whereEqualTo("id", id_creator).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for(QueryDocumentSnapshot q : queryDocumentSnapshots)
+                holder.textViewCreator.setText("Found by: " + q.get("username") );
+        });
+
     }
 
 }

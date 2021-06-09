@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
-            android:text="number of bus"
+            android:text="@string/name_of_bus"
             android:gravity="center"
             android:textAppearance="?attr/textAppearanceHeadline6" />
 
@@ -33,8 +33,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
-            android:text="Found by: "
-            android:gravity="right"
+            android:text="@string/creator_bus"
+            android:gravity="end"
             android:textAppearance="?attr/textAppearanceBody2" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>

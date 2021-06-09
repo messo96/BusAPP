@@ -48,7 +48,7 @@ public class AddTimeFragment extends Fragment {
         assert activity != null;
         int id_busStop = activity.getIntent().getIntExtra("busStop_id", -1);
         int id_creator = activity.getIntent().getIntExtra("id", -1);
-        String name_bus = activity.getIntent().getStringExtra("name_bus");
+        String name_bus = activity.getIntent().getStringExtra("bus_name");
         String day = activity.getIntent().getStringExtra("day");
         day_text.setText(day);
 

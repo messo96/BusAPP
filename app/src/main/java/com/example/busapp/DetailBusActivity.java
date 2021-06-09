@@ -19,12 +19,11 @@ public class DetailBusActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_bus_detail);
 
-        if(savedInstanceState == null){
+        if(savedInstanceState == null) {
             Utilities.insertFragment(this, new DetailBusFragment(), "Bus_detail", R.id.fragment_bus);
+            Objects.requireNonNull(getSupportActionBar()).setTitle(getIntent().getStringExtra("name_busStop") + " - " + getIntent().getStringExtra("bus_name"));
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        Objects.requireNonNull(getSupportActionBar()).setTitle(getIntent().getStringExtra("name_busStop") + " - " + getIntent().getStringExtra("bus_name"));
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
 

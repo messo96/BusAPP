@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,7 +52,7 @@ public class ProfileFragment extends Fragment {
     private FirebaseFirestore db;
     private final ActionBar actionBar;
 
-    public ProfileFragment(final boolean flagLogin, final androidx.appcompat.app.ActionBar actionBar) {
+    public ProfileFragment(final boolean flagLogin, final ActionBar actionBar) {
         super();
         this.login = flagLogin;
         this.actionBar = actionBar;
@@ -63,8 +64,6 @@ public class ProfileFragment extends Fragment {
         setHasOptionsMenu(true);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         db = FirebaseFirestore.getInstance();
-
-
     }
 
     @Nullable
@@ -88,6 +87,7 @@ public class ProfileFragment extends Fragment {
         boolean logged = sharedPreferences.getBoolean("logged", false);
 
         if (!login) { // Registration
+            actionBar.hide();
             EditText editText_username = view.findViewById(R.id.username_registration);
             EditText email = view.findViewById(R.id.email_registration);
             EditText password = view.findViewById(R.id.password_registration);
@@ -97,6 +97,7 @@ public class ProfileFragment extends Fragment {
             view.findViewById(R.id.redirect_login).setOnClickListener(l -> {
                 requireActivity().getSupportFragmentManager().popBackStack();
                 Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
+                super.requireActivity().onBackPressed();
             });
 
 
@@ -122,15 +123,17 @@ public class ProfileFragment extends Fragment {
 
                                         sharedPreferences.edit()
                                                 .putInt("id", Integer.parseInt(String.valueOf(map.get("id"))))
-                                                .putString("username", "")
-                                                .putString("email", String.valueOf(email.getText()))
+                                                .putString("username", user.getUsername())
+                                                .putString("email", user.getEmail())
                                                 .putBoolean("logged", true)
                                                 .apply();
 
                                         Toast.makeText(getContext(), "User created successfully", Toast.LENGTH_LONG).show();
                                         requireActivity().getSupportFragmentManager().popBackStack();
-                                        Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
-
+                                        requireActivity().getSupportFragmentManager().popBackStack();
+                                        Utilities.insertFragment((AppCompatActivity) requireActivity(), new MapsHome(), "MapsHome", R.id.fragment_container_view);
+                                        super.requireActivity().onBackPressed();
+                                        actionBar.hide();
                                     });
 
                         }
@@ -150,12 +153,15 @@ public class ProfileFragment extends Fragment {
             EditText email = view.findViewById(R.id.email_login);
             EditText password = view.findViewById(R.id.password_login);
             Button button_save = view.findViewById(R.id.button_login_user);
+            TextView textView_register = view.findViewById(R.id.redirect_register);
 
-            String email_text = sharedPreferences.getString("email", "email@email.it");
+            String username_text = sharedPreferences.getString("username", "");
 
             if (logged) {
+                actionBar.show();
+                actionBar.setTitle("YOUR PROFILE");
                 email.setEnabled(false);
-                email.setText(email_text);
+                email.setText(username_text);
                 password.setVisibility(View.GONE);
                 button_save.setText(R.string.logged);
                 button_save.setEnabled(false);
@@ -165,9 +171,21 @@ public class ProfileFragment extends Fragment {
                     e.printStackTrace();
                 }
 
+                textView_register.setText(R.string.logout);
+                view.findViewById(R.id.linear_logo_login).setVisibility(View.GONE);
+                view.findViewById(R.id.redirect_register).setOnClickListener(v ->  {
+                    sharedPreferences.edit()
+                            .putBoolean("logged", false)
+                            .putInt("id", -1)
+                            .apply();
+                    Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
+                });
+
+
 
             } else {
-                email.setText(sharedPreferences.getString("username", ""));
+                actionBar.hide();
+                email.setText(sharedPreferences.getString("email", "email@email.it"));
                 button_save.setOnClickListener(v -> {
                     hideSoftKeyboard(requireView());
                     String sEmail = String.valueOf(email.getText());
@@ -190,71 +208,61 @@ public class ProfileFragment extends Fragment {
                                     int id = Integer.parseInt(Objects.requireNonNull(task.getResult().getDocuments().get(0).get("id")).toString());
                                     sharedPreferences.edit()
                                             .putInt("id", id)
-                                            .putString("username", String.valueOf(email.getText()))
+                                            .putString("username", Objects.requireNonNull(task.getResult().getDocuments().get(0).get("username")).toString())
                                             .putString("email", String.valueOf(email.getText()))
                                             .putBoolean("logged", true)
                                             .apply();
                                     Snackbar.make(requireContext(), requireView(), "Logged!", Snackbar.LENGTH_SHORT).show();
                                     requireActivity().getSupportFragmentManager().popBackStack();
-                                    try {
-                                        setUpGamification();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
+                                    Utilities.insertFragment((AppCompatActivity) requireActivity(), new MapsHome(), "MapsHome", R.id.fragment_container_view);
+                                    super.requireActivity().onBackPressed();
+                                    actionBar.hide();
                                 }
                             });
 
                 });
 
-
-            }
-
-            TextView textView_register = view.findViewById(R.id.redirect_register);
-
-            if(logged){
-                textView_register.setText(R.string.logout);
                 view.findViewById(R.id.redirect_register).setOnClickListener(v ->  {
-                    sharedPreferences.edit()
-                            .putBoolean("logged", false)
-                            .putInt("id", -1)
-                            .apply();
-                    requireActivity().getSupportFragmentManager().popBackStack();
-                    Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(true, actionBar), "LoginFragment", R.id.fragment_container_view);
-                });
-
-            }
-            else{
-                view.findViewById(R.id.redirect_register).setOnClickListener(v ->  {
-                    requireActivity().getSupportFragmentManager().popBackStack();
                     Utilities.insertFragment((AppCompatActivity) requireActivity(), new ProfileFragment(false, actionBar), "RegistrationFragment", R.id.fragment_container_view);
                 });
-            }
 
+
+
+            }
         }
 
     }
 
     private void setUpGamification() throws IOException {
-        TextView textView = requireActivity().findViewById(R.id.listView_myactivity);
+        TextView textView = requireActivity().findViewById(R.id.listView_my_activity);
         textView.setVisibility(View.VISIBLE);
-        ListView listView = requireActivity().findViewById(R.id.listView_gramification);
+        ProgressBar progressBar = requireActivity().findViewById(R.id.progress_bar_gamification);
+        progressBar.setVisibility(View.VISIBLE);
+        TextView textView_exp = requireActivity().findViewById(R.id.text_view_progress_bar_gamification);
+        ListView listView = requireActivity().findViewById(R.id.listView_gamification);
         List<Gamification> list = new ArrayList<>();
+        int maxExp = 0;
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.gramification_detail)));
+        // read from File gamification_detail.txt
+        BufferedReader reader = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.gamification_detail)));
         String line = reader.readLine();
         while (line != null) {
-            String[] data = line.split("-");//TITLE-DESCRIPTION-EXP
-            list.add(new Gamification(data[0], data[1], Integer.parseInt(data[2])) );
-
+            String[] data = line.split("-"); //TITLE-DESCRIPTION-EXP
+            Gamification gamification = new Gamification(data[0], data[1], Integer.parseInt(data[2]));
+            list.add( gamification);
+            maxExp += gamification.getExp();
             line = reader.readLine();
         }
 
-        GramificationAdapter gramificationAdapter = new GramificationAdapter(getContext(), sharedPreferences.getInt("id", -1), list);
-        listView.setAdapter(gramificationAdapter);
+        progressBar.setMax(maxExp);
+        textView_exp.setText("maxExp: " + maxExp );
+        GamificationAdapter gamificationAdapter = new GamificationAdapter(getContext(), sharedPreferences.getInt("id", -1), list, progressBar);
+        listView.setAdapter(gamificationAdapter);
     }
 
     public void hideSoftKeyboard(View view){
         InputMethodManager imm =(InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
+
 }

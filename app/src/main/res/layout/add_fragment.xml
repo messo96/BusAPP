@@ -2,8 +2,8 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
 <androidx.appcompat.widget.LinearLayoutCompat
     android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         android:layout_gravity="center"
         android:fontFamily="@font/alegreya_bold"
 
-        android:text="Insert name of Bus Stop:"
+        android:text="@string/add_name_bus_stop"
         android:textSize="20sp"
         android:typeface="normal" />
 
@@ -25,16 +25,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:id="@+id/edit_text_number_bus"
+        android:id="@+id/edit_text_name_bus_stop"
         android:inputType="text"
-        android:layout_marginHorizontal="80dp"/>
+        android:hint="@string/hint_name_bus_stop"
+        android:gravity="center"
+        android:autofillHints="@string/hint_name_bus_text"
+        android:layout_marginHorizontal="80dp" />
 
 
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Position"
+        android:text="@string/add_position_bus_stop"
         android:layout_marginTop="30dp"
         android:layout_gravity="center"
         android:fontFamily="@font/alegreya_bold"
@@ -55,6 +58,7 @@
         android:layout_gravity="top|center"
         app:iconGravity="textTop"
         android:layout_margin="10dp"
+        android:background="@drawable/radius"
         app:icon="@drawable/ic_baseline_gps_fixed_24" />
 
     <ImageView
@@ -70,21 +74,44 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:icon="@drawable/ic_baseline_camera_alt_24"
-        android:text="Take a Photo"
+        android:text="@string/add_photo_bus_stop"
+        android:background="@drawable/radius"
         android:layout_gravity="center"/>
-
-
-
 
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_add_busstop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="150dp"
+        android:layout_marginHorizontal="60dp"
+        app:iconTint="@color/primary_color_app"
+        android:textColor="@color/black"
+        android:background="@drawable/radius"
+        android:text="@string/btn_add_bus_stop"
+        app:backgroundTint="@color/ic_launcher_background"
+        app:icon="@drawable/sharp_add_black_36" />
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_inside_add_bus_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginTop="45dp"
-        app:icon="@drawable/sharp_add_black_36"
-        android:text="Add" />
+        android:layout_gravity="center"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="5dp"
+        android:contentDescription="@string/Add"
+        android:rotation="45"
+        android:scaleType="center"
+        android:src="@drawable/ic_baseline_add_24_white"
+        app:backgroundTint="@color/primary_color_app"
+        app:borderWidth="2dp"
+        app:elevation="0dp"
+        app:fabSize="normal"
+        app:tint="@color/white" />
+
+
 
 
 </androidx.appcompat.widget.LinearLayoutCompat>

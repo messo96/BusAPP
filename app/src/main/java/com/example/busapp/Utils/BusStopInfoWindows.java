@@ -118,7 +118,6 @@ public class BusStopInfoWindows extends InfoWindow {
     }
 
 
-
     private void addListToInfoWindows(QuerySnapshot queryDocumentSnapshots, TextView textView_list_bus) {
         textView_list_bus.setText("");
         for(QueryDocumentSnapshot q : queryDocumentSnapshots) {

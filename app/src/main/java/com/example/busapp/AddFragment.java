@@ -116,7 +116,12 @@ public class AddFragment extends Fragment {
         actionBar.setTitle("Add new Bus Stop");
         Activity activity = requireActivity();
         view_position = activity.findViewById(R.id.edit_text_position);
-        EditText editText_busStopName = view.findViewById(R.id.edit_text_number_bus);
+
+        view.findViewById(R.id.fab_inside_add_bus_stop).setOnClickListener( l ->{
+            requireActivity().onBackPressed();
+        });
+
+        EditText editText_busStopName = view.findViewById(R.id.edit_text_name_bus_stop);
         int id = sharedPreferences.getInt("id", -1);
 
         if (id == -1) {
@@ -263,6 +268,7 @@ public class AddFragment extends Fragment {
 
 
     private void uploadImage() {
+        Toast.makeText(getContext(), "Take a photo of point of reference for find the bus stop", Toast.LENGTH_LONG).show();
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, "Place_Picture_BUSAPP");
         values.put(MediaStore.Images.Media.DESCRIPTION, "Photo taken on " + System.currentTimeMillis());

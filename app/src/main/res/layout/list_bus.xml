@@ -21,7 +21,8 @@
          android:layout_height="wrap_content"
          android:layout_gravity="bottom|end"
          android:layout_margin="25dp"
-         android:src="@drawable/sharp_add_black_36" />
+         android:src="@drawable/sharp_add_black_36"
+         android:contentDescription="fab_add_bus" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:padding="10dip"
         android:textSize="16sp"
-        android:text="TIME"
+        android:text="@string/default_text_time"
         android:textStyle="bold" />
 
 
@@ -33,7 +33,7 @@
         android:layout_marginRight="25dp"
         app:iconGravity="end"
         app:backgroundTint="@color/green"
-        />
+        android:layout_marginEnd="25dp" />
 
     <TextView
         android:id="@+id/text_feedback"
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:padding="10dip"
         android:textSize="16sp"
-        android:text="FEEDBACK"
+        android:text="@string/text_default_feedback"
         android:textStyle="bold"
         />
 
@@ -50,12 +50,12 @@
         android:id="@+id/btn_dislike"
         android:layout_width="45dp"
         android:layout_height="wrap_content"
-        android:gravity="right"
+        android:gravity="end"
         android:layout_marginLeft="25dp"
         android:background="@drawable/ic_baseline_thumb_down_24"
         app:iconGravity="end"
         app:backgroundTint="@color/red"
-        />
+        android:layout_marginStart="25dp" />
 
 
 

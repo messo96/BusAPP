@@ -29,9 +29,10 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         AppCompatActivity activity = this;
         Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.app_name);
+        getSupportActionBar().hide();
 
 
-         //FOR DEBUG, EVERY TIME YOU OPEN THE APP YOU HAVE TO LOGIN
+         //DEBUG ONLY, EVERY TIME YOU OPEN THE APP YOU HAVE TO LOGIN
       // PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
              //  .edit()
              // .putBoolean("logged", false)
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.navigation_maps:
                         getSupportActionBar().setTitle(R.string.app_name);
                         selectedFragment = new MapsHome();
+                        getSupportActionBar().hide();
                         nameFragment = "MapsHome";
                         break;
                     case R.id.navigation_profile:
@@ -93,10 +95,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-
         bottomNavigationView.getMenu().findItem(R.id.navigation_maps).setChecked(true);
         Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.app_name);
         super.onBackPressed();
-
     }
 }

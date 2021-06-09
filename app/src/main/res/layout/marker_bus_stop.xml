@@ -16,13 +16,14 @@
         android:layout_height="200dp"
         android:padding="10dp"
         android:layout_marginTop="15dp"
-        android:contentDescription="Bus Stop Photo" />
+        android:contentDescription="@string/bus_stop_photo_description" />
 
 <TextView
     android:id="@+id/name_busStop"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginLeft="15dp"
+    android:layout_marginStart="15dp"
     android:textColor="@color/white"
     />
 
@@ -31,6 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="30dp"
+        android:layout_marginStart="30dp"
         android:textColor="@android:color/white"
         />
 
@@ -38,7 +40,7 @@
         android:id="@+id/btn_see_bus"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
-        android:text="See"
+        android:text="@string/btn_info_window"
         app:icon="@drawable/ic_baseline_chevron_right_24"
         android:layout_marginTop="30dp"
         app:iconGravity="end"
@@ -48,12 +50,12 @@
         android:id="@+id/text_created_marker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="right"
+        android:gravity="end"
         android:textColor="@color/white"
-        android:text="Created by: "
+        android:text="@string/create_username_info_window"
         android:layout_marginBottom="10dp"
-        android:layout_marginRight="30dp"
-        />
+        android:layout_marginEnd="30dp"
+        android:layout_marginRight="30dp" />
 
 
 
